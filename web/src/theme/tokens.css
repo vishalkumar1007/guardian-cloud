@@ -1,0 +1,296 @@
+:root,
+[data-theme="light"] {
+  --g-ink: #0f1020;
+  --g-ink-soft: #5b5d7a;
+  --g-mist: #ececf6;
+  --g-mist-deep: #dde0f0;
+  --g-signal: #4f46e5;
+  --g-signal-soft: #e0e7ff;
+  --g-alert: #7c3aed;
+  --g-line: color-mix(in srgb, #0f1020 9%, transparent);
+  --g-surface: #ffffff;
+  --g-surface-2: #f4f5fb;
+  --g-glow: color-mix(in srgb, #4f46e5 5%, transparent);
+  --g-grain: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.28'/%3E%3C/svg%3E");
+  --g-card-shadow: 0 1px 2px rgba(15, 16, 32, 0.05), 0 8px 32px rgba(15, 16, 32, 0.06);
+  --g-card-shadow-hover: 0 4px 16px rgba(15, 16, 32, 0.07), 0 16px 48px rgba(15, 16, 32, 0.07);
+}
+
+[data-theme="dark"] {
+  --g-ink: #ececff;
+  --g-ink-soft: #9aa0c8;
+  --g-mist: #07081a;
+  --g-mist-deep: #0f112a;
+  --g-signal: #818cf8;
+  --g-signal-soft: #1e1f4a;
+  --g-alert: #a78bfa;
+  --g-line: color-mix(in srgb, #ececff 10%, transparent);
+  --g-surface: #10112a;
+  --g-surface-2: #15173a;
+  --g-glow: color-mix(in srgb, #818cf8 6%, transparent);
+  --g-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 40px rgba(0, 0, 0, 0.45);
+  --g-card-shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.35), 0 20px 56px rgba(0, 0, 0, 0.4);
+}
+
+.g-atmosphere {
+  background:
+    radial-gradient(700px 320px at 50% -6%, var(--g-glow), transparent 68%),
+    linear-gradient(180deg, var(--g-mist) 0%, var(--g-mist-deep) 54%, var(--g-mist) 100%);
+  color: var(--g-ink);
+}
+
+.g-atmosphere::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  opacity: 0.025;
+  background-image: var(--g-grain);
+  z-index: 0;
+}
+
+[data-theme="dark"] .g-atmosphere::before {
+  opacity: 0.04;
+}
+
+.g-card {
+  background: var(--g-surface);
+  border: 1px solid var(--g-line);
+  border-radius: 20px;
+  box-shadow: var(--g-card-shadow);
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.3s ease;
+}
+
+.g-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--g-card-shadow-hover);
+  border-color: color-mix(in srgb, var(--g-signal) 12%, var(--g-line));
+}
+
+.g-glow-ring {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--g-signal) 18%, transparent),
+    0 0 32px color-mix(in srgb, var(--g-signal) 14%, transparent);
+}
+
+/* Orbit pill nav */
+.g-public-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 64px;
+  padding: 0 16px;
+  pointer-events: none;
+  background: transparent;
+}
+
+.g-public-nav-inner {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+  max-width: 1120px;
+  height: 48px;
+  padding: 0 10px 0 14px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  transition:
+    background-color 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.4s ease,
+    box-shadow 0.4s ease,
+    backdrop-filter 0.4s ease;
+}
+
+.g-public-nav.scrolled .g-public-nav-inner {
+  background: color-mix(in srgb, var(--g-surface) 84%, transparent);
+  border-color: var(--g-line);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, white 60%, transparent),
+    0 8px 32px color-mix(in srgb, var(--g-ink) 8%, transparent);
+}
+
+[data-theme='dark'] .g-public-nav.scrolled .g-public-nav-inner {
+  background: color-mix(in srgb, var(--g-surface) 78%, transparent);
+  border-color: color-mix(in srgb, white 9%, transparent);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06),
+    0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+.g-public-nav-links {
+  display: none;
+  align-items: center;
+  gap: 22px;
+}
+
+@media (min-width: 860px) {
+  .g-public-nav-links {
+    display: flex;
+  }
+}
+
+.g-public-nav-links a {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--g-ink-soft);
+  text-decoration: none;
+  transition: color 0.2s ease;
+  padding: 6px 2px;
+  position: relative;
+}
+
+.g-public-nav-links a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 1px;
+  height: 1px;
+  background: var(--g-signal);
+  opacity: 0;
+  transform: scaleX(0.6);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.g-public-nav-links a:hover {
+  color: var(--g-ink);
+}
+
+.g-public-nav-links a:hover::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.g-hero-wrap {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(800px 360px at 50% -8%, var(--g-glow), transparent 70%),
+    linear-gradient(180deg, color-mix(in srgb, var(--g-mist) 98%, white 2%) 0%, var(--g-mist) 35%, var(--g-mist-deep) 62%, var(--g-mist) 100%);
+}
+
+.g-landing-hero {
+  position: relative;
+  padding-top: calc(64px + 36px);
+  padding-bottom: 28px;
+}
+
+@media (min-width: 768px) {
+  .g-landing-hero {
+    padding-top: calc(64px + 48px);
+    padding-bottom: 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .g-landing-hero {
+    padding-top: calc(64px + 56px);
+    padding-bottom: 36px;
+  }
+}
+
+.g-laptop-stage {
+  position: relative;
+  background: transparent;
+  padding: 12px 0 64px;
+}
+
+@media (min-width: 768px) {
+  .g-laptop-stage {
+    padding: 16px 0 72px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .g-laptop-stage {
+    padding: 20px 0 80px;
+  }
+}
+
+.g-section {
+  padding: 64px 24px;
+}
+
+@media (min-width: 768px) {
+  .g-section {
+    padding: 80px 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .g-section {
+    padding: 96px 32px;
+  }
+}
+
+.g-section-muted {
+  background: color-mix(in srgb, var(--g-mist-deep) 45%, var(--g-mist) 55%);
+}
+
+.g-public-shell > main {
+  padding-top: 0;
+}
+.g-public-shell:not(.g-landing) > main {
+  padding-top: 64px;
+}
+
+.g-auth-shell {
+  display: block;
+  --g-glow: transparent;
+  background: var(--g-mist) !important;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
+}
+.g-auth-shell.g-atmosphere {
+  background: var(--g-mist) !important;
+}
+.g-auth-shell.g-atmosphere::before {
+  display: none;
+}
+.g-auth-shell > main {
+  display: block;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
+  padding: 0 !important;
+  background: transparent;
+}
+.g-public-shell.g-auth-shell:not(.g-landing) > main {
+  padding-top: 0 !important;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+  overflow-x: hidden;
+}
+
+body {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+#root {
+  overflow: visible;
+}

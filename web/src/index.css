@@ -1,0 +1,118 @@
+@import "tailwindcss";
+@import "./theme/tokens.css";
+
+@theme {
+  --font-display: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+  --color-ink: var(--g-ink);
+  --color-ink-soft: var(--g-ink-soft);
+  --color-mist: var(--g-mist);
+  --color-mist-deep: var(--g-mist-deep);
+  --color-signal: var(--g-signal);
+  --color-signal-soft: var(--g-signal-soft);
+  --color-alert: var(--g-alert);
+  --color-line: var(--g-line);
+  --color-surface: var(--g-surface);
+  --color-surface-2: var(--g-surface-2);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+html {
+  color-scheme: dark;
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  color: var(--g-ink);
+  background: var(--g-mist);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--g-signal) 35%, transparent);
+}
+
+@keyframes spine-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--g-signal) 45%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--g-signal) 0%, transparent);
+  }
+}
+
+@keyframes ribbon-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-spine-pulse {
+  animation: spine-pulse 2.4s ease-in-out infinite;
+}
+
+.animate-ribbon-in {
+  animation: ribbon-in 0.45s ease-out both;
+}
+
+.animate-reveal {
+  animation: reveal-up 0.55s ease-out both;
+}
+
+.animate-float {
+  animation: float-y 4.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-spine-pulse {
+    animation: none;
+  }
+  * {
+    scroll-behavior: auto !important;
+  }
+}
