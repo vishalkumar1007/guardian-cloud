@@ -3,7 +3,7 @@ import { motion, useScroll, useTransform, useReducedMotion } from 'motion/react'
 import { useRef } from 'react'
 import { Button } from '../components/ui/button'
 import { MacBookProductStage } from '../components/mac/MacBookProductStage'
-import { LineGridBg } from '../components/home/LineGridBg'
+import { SentinelMeshBg } from '../components/home/SentinelMeshBg'
 import { Reveal, Stagger, StaggerItem } from '../components/home/Reveal'
 import { ProductDetail } from '../components/home/ProductDetail'
 import { PortalsSection, WhatIsSection, ModesSection } from '../components/home/PortalsSection'
@@ -45,8 +45,7 @@ export function LandingPage() {
   return (
     <div>
       <div ref={heroRef} className="g-hero-wrap">
-        <LineGridBg />
-        <div className="pointer-events-none absolute left-1/2 top-[52%] h-[360px] w-[680px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--g-glow)] opacity-30 blur-3xl md:h-[420px] md:w-[760px]" />
+        <SentinelMeshBg />
         <section className="g-landing-hero relative">
           <motion.div style={reduce ? undefined : { y, opacity }} className="mx-auto w-full max-w-6xl px-6 lg:px-8">
             <div className="mx-auto max-w-[640px] text-center">
@@ -74,7 +73,15 @@ export function LandingPage() {
         </section>
         <section className="g-laptop-stage">
           <div className="mx-auto w-full max-w-6xl px-6 lg:px-8">
-            <p className="mb-4 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-ink-soft">Interactive preview — Overview · Signals · Protect</p>
+            <div className="mb-[80px] flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-ink-soft">
+              <span className="inline-flex items-center gap-2">
+                <span className="h-1 w-1 rounded-full bg-signal" />
+                Interactive Tour
+              </span>
+              <span className="opacity-30">—</span>
+              <span className="truncate">What Is Guardian · Tools · How It Works</span>
+              <span className="hidden sm:inline-flex items-center rounded-full border border-signal/15 bg-signal-soft px-2 py-0.5 text-[9px] font-semibold tracking-wide text-signal normal-case">Live preview</span>
+            </div>
             <MacBookProductStage hero />
           </div>
         </section>

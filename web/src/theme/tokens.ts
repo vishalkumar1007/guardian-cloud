@@ -61,6 +61,7 @@ export function applyThemeTokens(tokens: ThemeTokens) {
   const scheme = tokens.colorScheme === 'light' ? 'light' : 'dark'
   root.dataset.theme = scheme
   root.dataset.atmosphere = tokens.atmosphereMode || (scheme === 'dark' ? 'void' : 'mist')
+  root.classList.toggle('dark', scheme === 'dark')
 
   ;(Object.keys(TOKEN_CSS_VARS) as (keyof typeof TOKEN_CSS_VARS)[]).forEach((key) => {
     if (key === 'atmosphereMode') return

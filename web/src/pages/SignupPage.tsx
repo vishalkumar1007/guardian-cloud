@@ -1,152 +1,302 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'motion/react'
-import { User, AtSign, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
+import { User, AtSign, Lock, Eye, EyeOff, ArrowRight, Check } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { GuardianMark } from '../components/GuardianMark'
+import { SentinelMeshBg } from '../components/home/SentinelMeshBg'
 
 export function SignupPage() {
-  const [notice, setNotice] = useState('')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [show, setShow] = useState(false)
-  const strength = password.length === 0 ? 0 : password.length < 10 ? 1 : password.length < 14 ? 2 : 3
+  const [showPassword, setShowPassword] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
+
+  // Real-time password criteria evaluation
+  const hasMinLength = password.length >= 10
+  const hasUpperLower = /[a-z]/.test(password) && /[A-Z]/.test(password)
+  const hasNumber = /[0-9]/.test(password)
+  const hasSymbol = /[^A-Za-z0-9]/.test(password)
+
+  const strengthScore = [hasMinLength, hasUpperLower, hasNumber, hasSymbol].filter(Boolean).length
 
   function onSubmit(e: FormEvent) {
     e.preventDefault()
-    if (!name.trim() || !email || password.length < 10) {
-      setNotice('Name, email, and a password of at least 10 characters are required.')
+    if (!name.trim()) {
+      setNotice('Please enter your name.')
       return
     }
-    setNotice('Signup lands with F1.1 — personal tenant creation comes next.')
+    if (!email || !email.includes('@')) {
+      setNotice('Please enter a valid email address.')
+      return
+    }
+    if (password.length < 10) {
+      setNotice('Password must be at least 10 characters.')
+      return
+    }
+
+    setIsSubmitting(true)
+    setNotice(null)
+
+    setTimeout(() => {
+      setIsSubmitting(false)
+      setNotice('Account ready for atomic tenant provisioning.')
+    }, 600)
   }
 
   return (
-    <section className="relative flex h-[100dvh] w-screen overflow-hidden">
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] as const }}
-        className="relative z-10 grid h-[100dvh] min-h-0 w-screen md:grid-cols-2"
-      >
-        <div className="relative flex flex-col justify-center bg-surface p-8 sm:p-10 md:p-10 lg:p-12">
-          <div className="mx-auto flex w-full max-w-sm flex-col gap-6">
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-signal text-white">
+    <div className="relative h-[100dvh] w-screen overflow-hidden bg-mist">
+      <SentinelMeshBg className="opacity-50" />
+      <div className="grid h-full w-full lg:grid-cols-2 relative z-10">
+        {/* LEFT: Clean, High-Impact Brand Showcase */}
+        <div className="relative hidden h-full flex-col justify-between border-r border-line bg-surface/40 p-10 lg:flex xl:p-14">
+          {/* Subtle Ambient Glow */}
+          <div className="pointer-events-none absolute -left-20 -top-20 h-72 w-72 rounded-full bg-signal/10 blur-[100px]" />
+          <div className="pointer-events-none absolute bottom-0 right-0 h-64 w-64 rounded-full bg-signal/5 blur-[90px]" />
+
+          {/* Brand Header */}
+          <div className="relative z-10">
+            <Link to="/" className="group inline-flex items-center gap-2.5 no-underline">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-signal text-white shadow-sm transition-transform group-hover:scale-105">
                 <GuardianMark className="h-5 w-5" />
               </span>
-              <span className="font-display text-sm font-semibold tracking-tight text-ink">Guardian</span>
-              <span className="ml-auto inline-flex items-center gap-1 rounded-full border border-line bg-surface-2 px-2.5 py-1 font-mono text-[10px] font-medium tracking-wide text-ink-soft">
-                <span className="h-1.5 w-1.5 rounded-full bg-signal" /> Personal Basic
+              <span className="font-display text-base font-bold tracking-tight text-ink">Guardian</span>
+            </Link>
+          </div>
+
+          {/* Central Hero Message */}
+          <div className="relative z-10 my-auto max-w-md">
+            <div className="inline-flex items-center gap-2 rounded-full border border-line bg-surface-2 px-3 py-1 font-mono text-[11px] font-medium text-ink-soft">
+              <span className="h-1.5 w-1.5 rounded-full bg-signal animate-pulse" />
+              Personal Basic Tier · 14-Day Free Trial
+            </div>
+
+            <h1 className="mt-6 font-display text-3xl font-extrabold leading-tight tracking-tight text-ink xl:text-4xl">
+              Start your watchline.
+              <br />
+              <span className="text-ink-soft font-medium">Protect up to 3 devices.</span>
+            </h1>
+
+            <p className="mt-4 text-sm leading-relaxed text-ink-soft">
+              Provision an isolated personal tenant in seconds. Enroll laptops, desktops, or servers with a single secure install command.
+            </p>
+
+            <div className="mt-8 space-y-3 font-mono text-xs text-ink-soft">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-signal/15 text-signal">
+                  <Check className="h-3 w-3" />
+                </span>
+                <span>Includes 3 device seats (macOS, Windows, Linux)</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-signal/15 text-signal">
+                  <Check className="h-3 w-3" />
+                </span>
+                <span>Zero configuration · Instant 1-line enrollment</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-signal/15 text-signal">
+                  <Check className="h-3 w-3" />
+                </span>
+                <span>No credit card required to start</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer Note */}
+          <div className="relative z-10 font-mono text-[11px] text-ink-soft/70">
+            Cancel or upgrade anytime · Encrypted by design
+          </div>
+        </div>
+
+        {/* RIGHT: Clean, Focused, Unscrollable Signup Card */}
+        <div className="relative flex h-full flex-col justify-between p-6 sm:p-10 lg:p-12 xl:p-14 overflow-hidden">
+          {/* Top Home Link */}
+          <div className="flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-2 text-ink lg:hidden no-underline">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-signal text-white">
+                <GuardianMark className="h-4 w-4" />
               </span>
-            </div>
+              <span className="font-display text-sm font-bold">Guardian</span>
+            </Link>
+            <Link
+              to="/"
+              className="ml-auto font-mono text-xs text-ink-soft hover:text-ink transition-colors no-underline"
+            >
+              ← Back to home
+            </Link>
+          </div>
 
-            <div className="space-y-1.5">
-              <h1 className="font-display text-[22px] font-bold leading-tight tracking-tight text-ink">Create your watchline</h1>
-              <p className="text-sm leading-relaxed text-ink-soft">Up to 3 devices, one line.</p>
-            </div>
-
-            <form onSubmit={onSubmit} className="flex flex-col gap-5">
-              <div className="space-y-1.5">
-                <Label htmlFor="name">Name</Label>
-                <div className="relative">
-                  <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-soft" />
-                  <Input id="name" required autoComplete="name" placeholder="Ada Lovelace" value={name} onChange={(e) => setName(e.target.value)} className="h-11 rounded-xl pl-9" />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <AtSign className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-soft" />
-                  <Input id="email" type="email" required autoComplete="email" placeholder="you@company.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-11 rounded-xl pl-9" />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <button type="button" onClick={() => setShow((v) => !v)} className="font-mono text-xs font-medium text-ink-soft hover:text-ink">
-                    {show ? <EyeOff className="inline h-3.5 w-3.5" /> : <Eye className="inline h-3.5 w-3.5" />} {show ? 'Hide' : 'Show'}
-                  </button>
-                </div>
-                <div className="relative">
-                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-soft" />
-                  <Input id="password" type={show ? 'text' : 'password'} required minLength={10} autoComplete="new-password" placeholder="At least 10 characters" value={password} onChange={(e) => setPassword(e.target.value)} className="h-11 rounded-xl pl-9 pr-9" />
-                </div>
-                <div className="flex gap-1.5">
-                  {[0, 1, 2].map((i) => (
-                    <span key={i} className={`h-1 flex-1 rounded-full ${i < strength ? (strength === 1 ? 'bg-amber-500' : 'bg-signal') : 'bg-line'}`} />
-                  ))}
-                </div>
+          {/* Centered Auth Card */}
+          <div className="mx-auto my-auto w-full max-w-sm">
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35 }}
+              className="space-y-4"
+            >
+              <div>
+                <h2 className="font-display text-2xl font-bold tracking-tight text-ink sm:text-3xl">
+                  Create your account
+                </h2>
+                <p className="mt-1 text-xs text-ink-soft sm:text-sm">
+                  14-day free trial. No credit card required.
+                </p>
               </div>
 
-              <Button type="submit" variant="signal" className="mt-1 w-full rounded-full py-6 text-sm font-semibold">
-                Create account <ArrowRight className="h-4 w-4" />
-              </Button>
-            </form>
+              <form onSubmit={onSubmit} className="space-y-3.5 text-left">
+                {/* Name */}
+                <div className="space-y-1">
+                  <Label htmlFor="name" className="text-xs font-medium text-ink">
+                    Full name
+                  </Label>
+                  <div className="relative">
+                    <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-soft" />
+                    <Input
+                      id="name"
+                      type="text"
+                      required
+                      autoComplete="name"
+                      placeholder="Alex Morgan"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="h-10 rounded-xl pl-9 text-sm"
+                    />
+                  </div>
+                </div>
 
-            {notice ? <p className="rounded-xl border border-line bg-mist px-3 py-2.5 text-xs leading-relaxed text-ink-soft">{notice}</p> : null}
+                {/* Email */}
+                <div className="space-y-1">
+                  <Label htmlFor="email" className="text-xs font-medium text-ink">
+                    Email address
+                  </Label>
+                  <div className="relative">
+                    <AtSign className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-soft" />
+                    <Input
+                      id="email"
+                      type="email"
+                      required
+                      autoComplete="email"
+                      placeholder="you@company.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="h-10 rounded-xl pl-9 text-sm"
+                    />
+                  </div>
+                </div>
 
-            <div className="flex flex-col items-center gap-2 border-t border-line pt-5">
-              <p className="text-sm text-ink-soft">
-                Already watching?{' '}
+                {/* Password with clean inline criteria */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password" className="text-xs font-medium text-ink">
+                      Password
+                    </Label>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="inline-flex items-center gap-1 font-mono text-[11px] text-ink-soft hover:text-ink transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                      <span>{showPassword ? 'Hide' : 'Show'}</span>
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-soft" />
+                    <Input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      minLength={10}
+                      autoComplete="new-password"
+                      placeholder="••••••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="h-10 rounded-xl pl-9 pr-9 text-sm"
+                    />
+                  </div>
+
+                  {/* Clean, space-efficient password indicators */}
+                  <div className="pt-1 space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      {[0, 1, 2, 3].map((idx) => (
+                        <div
+                          key={idx}
+                          className={`h-1 flex-1 rounded-full transition-colors duration-200 ${
+                            password.length > 0 && idx < strengthScore
+                              ? strengthScore <= 1
+                                ? 'bg-red-500'
+                                : strengthScore === 2
+                                ? 'bg-amber-500'
+                                : 'bg-signal'
+                              : 'bg-line'
+                          }`}
+                        />
+                      ))}
+                    </div>
+
+                    <div className="flex items-center justify-between font-mono text-[10px] text-ink-soft px-0.5">
+                      <span className={`transition-colors ${hasMinLength ? 'text-signal font-semibold' : ''}`}>
+                        10+ chars
+                      </span>
+                      <span className="text-line">·</span>
+                      <span className={`transition-colors ${hasUpperLower ? 'text-signal font-semibold' : ''}`}>
+                        Upper & lower
+                      </span>
+                      <span className="text-line">·</span>
+                      <span className={`transition-colors ${hasNumber ? 'text-signal font-semibold' : ''}`}>
+                        Number
+                      </span>
+                      <span className="text-line">·</span>
+                      <span className={`transition-colors ${hasSymbol ? 'text-signal font-semibold' : ''}`}>
+                        Symbol
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Submit button */}
+                <Button
+                  type="submit"
+                  variant="signal"
+                  size="default"
+                  disabled={isSubmitting}
+                  className="w-full rounded-xl py-5 text-sm font-semibold shadow-sm mt-2"
+                >
+                  {isSubmitting ? (
+                    'Creating account...'
+                  ) : (
+                    <span className="inline-flex items-center gap-2">
+                      Start free trial <ArrowRight className="h-4 w-4" />
+                    </span>
+                  )}
+                </Button>
+              </form>
+
+              {notice && (
+                <div className="rounded-xl border border-signal/30 bg-signal-soft/20 px-3 py-2 text-xs text-ink">
+                  {notice}
+                </div>
+              )}
+
+              <p className="text-center text-xs text-ink-soft pt-1">
+                Already have an account?{' '}
                 <Link to="/login" className="font-semibold text-signal hover:underline">
                   Sign in
                 </Link>
               </p>
-              <Link to="/" className="font-mono text-xs text-ink-soft hover:text-ink">
-                ← Back to home
-              </Link>
-            </div>
+            </motion.div>
+          </div>
+
+          {/* Subtle Bottom Guarantee */}
+          <div className="text-center font-mono text-[10px] text-ink-soft/60">
+            By creating an account, you agree to the Terms of Service & Privacy Policy
           </div>
         </div>
-
-        <div className="relative hidden flex-col justify-between overflow-hidden bg-[#0a0f1e] p-10 md:flex lg:p-12">
-          <div className="pointer-events-none absolute inset-0 opacity-[0.08]" style={{ backgroundImage: `linear-gradient(var(--g-line) 1px, transparent 1px), linear-gradient(90deg, var(--g-line) 1px, transparent 1px)`, backgroundSize: '48px 48px' }} />
-
-          <div className="relative">
-            <p className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 font-mono text-[11px] font-medium tracking-wide text-white/80 backdrop-blur">
-              <span className="h-1.5 w-1.5 rounded-full bg-signal animate-spine-pulse" /> Personal Basic · $9/mo
-            </p>
-            <h2 className="mt-5 font-display text-[28px] font-bold leading-[1.1] tracking-tight text-white">
-              Start with
-              <br />
-              <span className="font-light text-white/60">3 devices, today.</span>
-            </h2>
-            <p className="mt-3 max-w-[300px] text-[14px] leading-relaxed text-white/60">Enroll your first device in under a minute. Signals start instantly.</p>
-          </div>
-
-          <div className="relative">
-            <div className="absolute left-[13px] top-3 bottom-3 w-px bg-gradient-to-b from-white/20 via-white/10 to-transparent" />
-            <ol className="space-y-6">
-              {[
-                { n: '1', t: 'Create account', d: 'Personal Basic — free' },
-                { n: '2', t: 'Enroll device', d: 'One command · token' },
-                { n: '3', t: 'Watch & protect', d: 'Signals · LOCK when needed' },
-              ].map((s) => (
-                <li key={s.n} className="relative flex gap-3.5 pl-1">
-                  <span className="relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-xs font-bold text-[#0a0f1e] shadow-sm">{s.n}</span>
-                  <div className="pt-0.5">
-                    <p className="text-sm font-semibold leading-none tracking-tight text-white">{s.t}</p>
-                    <p className="mt-1 text-xs leading-relaxed text-white/55">{s.d}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-            <div className="mt-6 flex flex-wrap gap-2">
-              {['3 devices', 'Presence', 'Ribbon', 'Audit trail'].map((t) => (
-                <span key={t} className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-[11px] text-white/70">
-                  {t}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <p className="relative font-mono text-[11px] tracking-wide text-white/35">No credit card · Upgrade for faces & evidence</p>
-        </div>
-      </motion.div>
-    </section>
+      </div>
+    </div>
   )
 }

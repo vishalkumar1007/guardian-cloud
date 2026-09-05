@@ -24,9 +24,13 @@ func NewRouter(deps RouterDeps) http.Handler {
 	r.Get("/healthz", healthz)
 
 	theme := &ThemeHandler{DB: deps.DB}
+	bootstrap := &BootstrapHandler{DB: deps.DB}
+
 	r.Route("/api/v1/platform", func(pr chi.Router) {
 		pr.Get("/theme", theme.Get)
 		pr.Put("/theme", theme.Put)
+		pr.Get("/bootstrap", bootstrap.GetStatus)
+		pr.Post("/setup", bootstrap.Setup)
 	})
 
 	return r
@@ -47,7 +51,7 @@ func cors(publicWebURL string) func(http.Handler) http.Handler {
 			if _, ok := origins[origin]; ok {
 				w.Header().Set("Access-Control-Allow-Origin", origin)
 				w.Header().Set("Vary", "Origin")
-				w.Header().Set("Access-Control-Allow-Methods", "GET, PUT, OPTIONS")
+				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 				w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Platform-Token, X-Request-ID")
 			}
 			if r.Method == http.MethodOptions {
