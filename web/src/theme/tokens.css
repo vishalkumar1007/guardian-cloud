@@ -301,7 +301,7 @@ html[data-atmosphere="blush"] .g-atmosphere,
   border-radius: 9999px !important;
 }
 .g-dashboard-shell .g-card,
-.g-dashboard-shell [class*="rounded-["]:not([class*="rounded-full"]) {
+.g-dashboard-shell [class*="rounded-["]:not([class*="rounded-full"]):not(.g-device-chrome):not(.g-device-chrome *) {
   border-radius: var(--g-radius) !important;
 }
 
@@ -358,7 +358,59 @@ html[data-atmosphere="blush"] .g-atmosphere,
 .rounded-xl { border-radius: var(--g-radius) !important; }
 .rounded-2xl { border-radius: var(--g-radius-lg) !important; }
 .rounded-3xl { border-radius: var(--g-radius-lg) !important; }
-[class*="rounded-["] { border-radius: var(--g-radius) !important; }
+/* Theme radius must not reshape hardware mockups (Mac / iPhone) */
+[class*="rounded-["]:not(.g-device-chrome):not(.g-device-chrome *) {
+  border-radius: var(--g-radius) !important;
+}
+
+/*
+ * Home-page device chrome — fixed to real MacBook Pro / iPhone Pro geometry.
+ * Never inherit Brand Studio / API --g-radius.
+ */
+.g-macbook-chassis {
+  border-radius: 24px !important; /* aluminum lid continuous curve */
+}
+.g-macbook-bezel-inset {
+  border-radius: 14px !important;
+}
+.g-macbook-screen {
+  border-radius: 12px !important; /* Liquid Retina display corners */
+}
+.g-macbook-display {
+  aspect-ratio: 3456 / 2234; /* MacBook Pro 16″ native */
+  min-height: 480px;
+  max-height: 560px;
+  width: 100%;
+}
+.g-macbook-glass {
+  border-radius: 6px !important;
+}
+.g-macbook-notch {
+  border-radius: 0 0 10px 10px !important;
+}
+
+.g-iphone-frame {
+  width: 100%;
+  max-width: 302px; /* ~71.5mm iPhone 16 Pro at mock scale */
+  margin-inline: auto;
+}
+.g-iphone-chassis {
+  border-radius: 55px !important; /* iPhone Pro continuous curve */
+  padding: 10px;
+}
+.g-iphone-bezel-inset {
+  border-radius: 47px !important;
+}
+.g-iphone-screen {
+  width: 100%;
+  /* Super Retina ~19.5:9 at ~268px inner width (302 frame − padding − bezel) */
+  height: 580px;
+  max-height: min(580px, 75vh);
+  border-radius: 47px !important;
+}
+.g-iphone-glass {
+  border-radius: 40px !important;
+}
 
 .g-card {
   background: var(--g-surface);

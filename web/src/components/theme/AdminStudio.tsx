@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { LayoutPanelLeft, Sparkles, Check, Info, Monitor, Moon, Sun, Layers, Palette, RefreshCw, AlertCircle, Type } from 'lucide-react'
+import { Sparkles, Check, Monitor, Moon, Sun, Layers, Palette, RefreshCw, AlertCircle, Type } from 'lucide-react'
 import { useNavPrefs } from '../../theme/navPrefs'
 import {
   RADIUS_PRESETS,
@@ -182,46 +182,33 @@ export function AdminStudio() {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border border-signal/20 bg-signal/5 p-4 flex items-start gap-3">
-        <div className="h-9 w-9 rounded-xl bg-signal/10 border border-signal/20 flex items-center justify-center shrink-0">
-          <LayoutPanelLeft className="h-4 w-4 text-signal" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <h3 className="font-display text-sm font-bold text-ink">Theme & Customized — Dashboard Only</h3>
-          <p className="text-ink-soft text-xs mt-0.5">
-            {isPersonal ? (
-              <>
-                <span className="text-signal font-semibold">Personal</span> {draft.accent} · {draft.colorScheme} · {draft.atmosphereMode} — saved per admin in DB.
-              </>
-            ) : (
-              <>
-                <span className="text-ink font-semibold">Following Brand</span> {globalTheme.accent} · {globalTheme.colorScheme} · {globalTheme.atmosphereMode} — dashboard mirrors Brand Studio.
-              </>
-            )}
-          </p>
-        </div>
-        <div className="flex flex-col items-end gap-1 shrink-0">
-          <span className={cn('text-[10px] px-2 py-1 rounded-full font-bold text-white', isPersonal ? 'bg-signal' : 'bg-ink')}>
-            {isPersonal ? 'PERSONAL' : 'FOLLOWING'}
-          </span>
-          {saving && <span className="text-[10px] text-ink-soft flex items-center gap-1"><RefreshCw className="h-3 w-3 animate-spin" />Saving…</span>}
-          {!saving && isPersonal && !error && <span className="text-[10px] text-signal">Saved</span>}
-        </div>
-      </div>
-
       <div className="rounded-2xl border border-signal/20 bg-signal/5 p-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5 min-w-0">
           <span className="h-8 w-8 rounded-xl flex items-center justify-center border shrink-0 bg-signal text-white border-signal">
             {isPersonal ? <Palette className="h-4 w-4" /> : <Layers className="h-4 w-4" />}
           </span>
           <div className="min-w-0">
-            <div className="font-display text-xs font-bold text-ink">
-              {isPersonal ? 'Custom Dashboard — Personal Theme Active' : 'Following Brand Studio (Global)'}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-display text-xs font-bold text-ink">
+                {isPersonal ? 'Personal dashboard theme' : 'Following Brand Studio'}
+              </span>
+              <span
+                className={cn(
+                  'text-[10px] px-2 py-0.5 rounded-full font-bold border',
+                  isPersonal
+                    ? 'bg-signal text-white border-signal'
+                    : 'bg-signal/15 text-signal border-signal/30',
+                )}
+              >
+                {isPersonal ? 'PERSONAL' : 'FOLLOWING'}
+              </span>
+              {saving && <span className="text-[10px] text-ink-soft flex items-center gap-1"><RefreshCw className="h-3 w-3 animate-spin" />Saving…</span>}
+              {!saving && isPersonal && !error && <span className="text-[10px] text-signal">Saved</span>}
             </div>
-            <div className="text-[11px] text-ink-soft">
+            <div className="text-[11px] text-ink-soft mt-0.5">
               {isPersonal
-                ? 'Brand changes do not affect this dashboard. Customize options below.'
-                : 'Dashboard uses Brand Studio. Enable Custom to unlock Theme & Customized controls.'}
+                ? 'Editing your personal /admin theme.'
+                : 'Mirroring Brand Studio — Enable Custom to edit.'}
             </div>
           </div>
         </div>
@@ -255,24 +242,6 @@ export function AdminStudio() {
         </div>
       )}
 
-      <div className="rounded-xl border border-signal/15 bg-signal/[0.04] p-2.5 text-xs flex items-center gap-2">
-        <Info className="h-3.5 w-3.5 text-signal shrink-0" />
-        <span className="text-ink-soft">
-          {isPersonal
-            ? <>Public routes stay on Brand Studio. Mood packs change canvas, type, radius, and atmosphere — not just accent color.</>
-            : <>Following Brand — Theme & Customized is disabled. Enable Custom to edit.</>}
-        </span>
-      </div>
-
-      {themeLocked && (
-        <div className="rounded-xl border border-line bg-surface-2 p-3 flex items-center gap-2 text-xs">
-          <Info className="h-4 w-4 text-ink-soft shrink-0" />
-          <span className="text-ink-soft font-medium">
-            Controls below are locked while Following Brand. Click <b className="text-ink">Enable Custom</b> to unlock.
-          </span>
-        </div>
-      )}
-
       <div className={cn('space-y-5 relative', themeLocked && 'opacity-45 select-none')} aria-disabled={themeLocked}>
         {themeLocked && <div className="absolute inset-0 z-10 cursor-not-allowed" aria-hidden />}
 
@@ -282,16 +251,14 @@ export function AdminStudio() {
               <h4 className="font-display text-sm font-bold text-ink flex items-center gap-2">
                 <Layers className="h-4 w-4 text-signal" /> Curated Packs
               </h4>
-              <p className="text-ink-soft text-[11px] mt-0.5">
-                Pick a mood pack. Top-nav light/dark flips scheme on top of that pack — accent, type, and radius stay.
-                {activePack && (
-                  <> Active: <span className="text-ink font-semibold">{activePack.label}</span>
-                    {draft.colorScheme !== activePack.scheme && (
-                      <span className="text-signal"> · {draft.colorScheme} overlay</span>
-                    )}
-                  </>
-                )}
-              </p>
+              {activePack && (
+                <p className="text-ink-soft text-[11px] mt-0.5">
+                  Active: <span className="text-ink font-semibold">{activePack.label}</span>
+                  {draft.colorScheme !== activePack.scheme && (
+                    <span className="text-signal"> · {draft.colorScheme} overlay</span>
+                  )}
+                </p>
+              )}
             </div>
             <div className="flex items-center gap-1 p-0.5 rounded-lg border border-line bg-surface-2">
               {([
@@ -313,7 +280,7 @@ export function AdminStudio() {
                 </button>
               ))}
             </div>
-            {themeLocked && <span className={lockedBadge}>disabled</span>}
+            {themeLocked && <span className={lockedBadge}>locked</span>}
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
@@ -332,10 +299,9 @@ export function AdminStudio() {
         <div className="rounded-2xl border border-line bg-surface p-5 space-y-4">
           <div className="flex items-center gap-2">
             <h4 className="font-display text-sm font-bold text-ink flex items-center gap-2">
-              <Monitor className="h-4 w-4 text-signal" /> Color Scheme — Dashboard
+              <Monitor className="h-4 w-4 text-signal" /> Color Scheme
             </h4>
-            {themeLocked && <span className={lockedBadge}>disabled</span>}
-            <span className="ml-auto text-[11px] text-ink-soft">packs sync</span>
+            {themeLocked && <span className={lockedBadge}>locked</span>}
           </div>
           <div className="grid grid-cols-2 gap-3">
             {(['dark', 'light'] as const).map((s) => (
@@ -359,9 +325,9 @@ export function AdminStudio() {
         <div className="rounded-2xl border border-line bg-surface p-5 space-y-4">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <h4 className="font-display text-sm font-bold text-ink flex items-center gap-2">
-              <Palette className="h-4 w-4 text-signal" /> Accent — Dashboard
+              <Palette className="h-4 w-4 text-signal" /> Accent
             </h4>
-            {themeLocked && <span className={lockedBadge}>disabled</span>}
+            {themeLocked && <span className={lockedBadge}>locked</span>}
             <span className="text-xs font-mono text-ink font-semibold uppercase flex items-center gap-2">
               <span className="h-4 w-4 rounded-full border border-line" style={{ background: draft.accent }} />
               {draft.accent}
@@ -389,14 +355,13 @@ export function AdminStudio() {
         <div className="rounded-2xl border border-line bg-surface p-5 space-y-4">
           <div className="flex items-center gap-2 flex-wrap">
             <h4 className="font-display text-sm font-bold text-ink flex items-center gap-2">
-              <Type className="h-4 w-4 text-signal" /> Typography — Dashboard
+              <Type className="h-4 w-4 text-signal" /> Typography
             </h4>
-            {themeLocked && <span className={lockedBadge}>disabled</span>}
+            {themeLocked && <span className={lockedBadge}>locked</span>}
+            <span className="ml-auto text-[11px] text-ink-soft truncate">
+              {draft.fontDisplay} + {draft.fontBody}
+            </span>
           </div>
-          <p className="text-ink-soft text-xs -mt-1">
-            Display + body fonts for this personal dashboard. Current:{' '}
-            <span className="text-ink font-semibold">{draft.fontDisplay}</span> + <span className="text-ink font-semibold">{draft.fontBody}</span>
-          </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {FONT_PAIRS.map((f) => {
               const sel = isPersonal && draft.fontDisplay === f.display && draft.fontBody === f.body
@@ -421,11 +386,11 @@ export function AdminStudio() {
         <div className="rounded-2xl border border-line bg-surface p-5 space-y-4">
           <div className="flex items-center gap-2">
             <h4 className="font-display text-sm font-bold text-ink flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-signal" /> Personal Radius — dashboard shell
+              <Sparkles className="h-4 w-4 text-signal" /> Radius
             </h4>
-            {themeLocked && <span className={lockedBadge}>disabled</span>}
+            {themeLocked && <span className={lockedBadge}>locked</span>}
+            <span className="ml-auto text-[11px] text-ink font-mono">{draft.radius}</span>
           </div>
-          <p className="text-ink-soft text-xs -mt-1">Only while Custom is enabled. Packs also set radius; adjust here to override.</p>
           <div className="grid grid-cols-5 gap-2">
             {RADIUS_PRESETS.map((r) => {
               const active = !themeLocked && (draft.radius === r.md || prefs.adminRadius === r.md)
@@ -445,15 +410,12 @@ export function AdminStudio() {
               )
             })}
           </div>
-          <div className="text-[11px] text-ink-soft">
-            Current: <span className="text-ink font-mono">{draft.radius}</span>
-          </div>
         </div>
 
         <div className="rounded-2xl border border-line bg-surface p-5 space-y-4">
           <div className="flex items-center gap-2">
-            <h4 className="font-display text-sm font-bold text-ink">Message Theme — personal</h4>
-            {themeLocked && <span className={lockedBadge}>disabled</span>}
+            <h4 className="font-display text-sm font-bold text-ink">Message Theme</h4>
+            {themeLocked && <span className={lockedBadge}>locked</span>}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -494,7 +456,7 @@ export function AdminStudio() {
               className={cn('border border-line bg-surface p-2 text-xs', prefs.messageStyle === 'bubble' ? 'rounded-2xl' : 'rounded-md')}
               style={{ borderRadius: prefs.adminRadius }}
             >
-              Preview bubble — {prefs.messageDensity} · {prefs.messageStyle} · {prefs.adminRadius}
+              Preview — {prefs.messageDensity} · {prefs.messageStyle}
             </div>
           </div>
         </div>

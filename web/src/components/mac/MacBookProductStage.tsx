@@ -96,18 +96,18 @@ export function MacBookProductStage({ className }: { className?: string; hero?: 
   return (
     <div className={cn('mx-auto w-full max-w-6xl', className)}>
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_302px] xl:grid-cols-[1fr_322px] items-center gap-6 xl:gap-8 pt-2 sm:pt-4">
-        <div className="relative mx-auto w-full min-w-0">
-          <div className="relative w-full rounded-[22px] border-[2px] bg-gradient-to-b from-[#e8ecf3] via-[#dde3ed] to-[#cbd5e1] p-[8px] shadow-[0_28px_80px_rgba(15,16,32,0.22),0_12px_32px_rgba(15,16,32,0.14),inset_0_1px_0_rgba(255,255,255,0.9)] dark:from-[#1e2635] dark:via-[#18202f] dark:to-[#0f1419] dark:border-[#2a3441] dark:shadow-[0_36px_96px_rgba(0,0,0,0.6),0_16px_40px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.06)] border-[#d1d5db]">
-            <div className="pointer-events-none absolute inset-[8px] rounded-[14px] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.6)] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]" />
-            <div className="relative overflow-hidden rounded-[14px] border-[7px] border-white bg-white shadow-[inset_0_0_20px_rgba(0,0,0,0.08)] dark:border-black dark:bg-black dark:shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.04] to-white/[0.07] rounded-[7px]" />
-              <div className="absolute left-1/2 top-0 z-30 flex h-[18px] w-[92px] -translate-x-1/2 items-center justify-center gap-1.5 rounded-b-[9px] bg-black shadow-[0_1px_4px_rgba(0,0,0,0.4)] ring-1 ring-white/10">
+        <div className="relative mx-auto w-full min-w-0 g-device-chrome">
+          <div className="relative w-full g-macbook-chassis border-[2px] bg-gradient-to-b from-[#e8ecf3] via-[#dde3ed] to-[#cbd5e1] p-[8px] shadow-[0_28px_80px_rgba(15,16,32,0.22),0_12px_32px_rgba(15,16,32,0.14),inset_0_1px_0_rgba(255,255,255,0.9)] dark:from-[#1e2635] dark:via-[#18202f] dark:to-[#0f1419] dark:border-[#2a3441] dark:shadow-[0_36px_96px_rgba(0,0,0,0.6),0_16px_40px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.06)] border-[#d1d5db]">
+            <div className="pointer-events-none absolute inset-[8px] g-macbook-bezel-inset shadow-[inset_0_0_0_1px_rgba(255,255,255,0.6)] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]" />
+            <div className="relative overflow-hidden g-macbook-screen border-[7px] border-white bg-white shadow-[inset_0_0_20px_rgba(0,0,0,0.08)] dark:border-black dark:bg-black dark:shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.04] to-white/[0.07] g-macbook-glass" />
+              <div className="absolute left-1/2 top-0 z-30 flex h-[18px] w-[92px] -translate-x-1/2 items-center justify-center gap-1.5 g-macbook-notch bg-black shadow-[0_1px_4px_rgba(0,0,0,0.4)] ring-1 ring-white/10">
                 <span className={cn('h-[7px] w-[7px] rounded-full ring-1 ring-white/10', activeMode === 1 ? 'bg-alert animate-pulse shadow-[0_0_8px_var(--g-alert)]' : 'bg-[#0a84ff] shadow-[0_0_8px_#0a84ff]')} />
                 <span className="h-1 w-1 rounded-full bg-white/15" />
                 <span className="h-[5px] w-[5px] rounded-full bg-white/10" />
               </div>
 
-              <div className="relative flex aspect-[3456/2234] max-h-[560px] min-h-[480px] w-full flex-col overflow-hidden bg-surface text-ink">
+              <div className="relative flex g-macbook-display flex-col overflow-hidden bg-surface text-ink">
                 <div className="flex h-9 shrink-0 items-center justify-between gap-2 border-b border-line bg-surface-2 px-3">
                   <div className="flex min-w-0 items-center gap-2">
                     <span className="hidden sm:flex items-center gap-1.5">

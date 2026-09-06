@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { Palette, Sparkles, Type, BoxSelect } from 'lucide-react'
+import { Palette, Type, BoxSelect } from 'lucide-react'
 import { ACCENT_PRESETS, FONT_PAIRS, RADIUS_PRESETS, themeTokensToCssVars, formatFontFamily, type ThemeTokens } from '../../theme/tokens'
 import { useAdminTheme } from '../../theme/adminTheme'
 import { cn } from '../../lib/utils'
@@ -26,35 +26,16 @@ export function BrandStudio({ draft, onAccent, onFont, onRadius, customAccent, o
 
   return (
     <div className={cn('space-y-6', !isPersonal && 'brand-studio-live')} style={liveStyle}>
-      <div className="rounded-2xl border border-signal/25 bg-signal/5 p-4 flex items-start gap-3">
-        <div className="h-9 w-9 rounded-xl bg-signal/10 border border-signal/20 flex items-center justify-center shrink-0">
-          <Sparkles className="h-4 w-4 text-signal" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="font-display text-sm font-bold text-ink">Brand Studio — Global</h3>
-          <p className="text-ink-soft text-xs mt-0.5">
-            Accent · Typography · Radius apply to public pages and dashboards <b className="text-ink">Following Brand</b>.
-            {isPersonal
-              ? ' Your dashboard stays on Enable Custom — Brand edits do not restyle this shell.'
-              : ' This panel live-previews Brand tokens while Following.'}
-          </p>
-        </div>
-        <span className="text-[10px] px-2 py-1 rounded-full bg-signal text-white shrink-0">GLOBAL</span>
-      </div>
-
       <div className="rounded-2xl border border-line bg-surface p-5 space-y-4">
         <div className="flex items-center justify-between">
           <h4 className="font-display text-sm font-bold text-ink flex items-center gap-2">
-            <Palette className="h-4 w-4 text-signal" /> Accent — Global
+            <Palette className="h-4 w-4 text-signal" /> Accent
           </h4>
           <span className="text-xs font-mono text-ink font-semibold uppercase flex items-center gap-2">
             <span className="h-4 w-4 rounded-full border border-line" style={{ background: draft.accent }} />
             {draft.accent}
           </span>
         </div>
-        <p className="text-ink-soft text-xs -mt-2">
-          Updates <code className="text-signal">--g-accent</code> / <code className="text-signal">--g-signal</code> for chrome, buttons, focus, and top wash.
-        </p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
           {ACCENT_PRESETS.map((p) => {
             const sel = draft.accent.toLowerCase() === p.accent.toLowerCase()
@@ -86,13 +67,12 @@ export function BrandStudio({ draft, onAccent, onFont, onRadius, customAccent, o
       </div>
 
       <div className="rounded-2xl border border-line bg-surface p-5 space-y-4">
-        <h4 className="font-display text-sm font-bold text-ink flex items-center gap-2">
-          <Type className="h-4 w-4 text-signal" /> Typography — Global
-        </h4>
-        <p className="text-ink-soft text-xs -mt-2">
-          Display + body fonts for Following Brand dashboards and public pages. Current:{' '}
-          <span className="text-ink font-semibold">{draft.fontDisplay}</span> + <span className="text-ink font-semibold">{draft.fontBody}</span>
-        </p>
+        <div className="flex items-center gap-2 flex-wrap">
+          <h4 className="font-display text-sm font-bold text-ink flex items-center gap-2">
+            <Type className="h-4 w-4 text-signal" /> Typography
+          </h4>
+          <span className="ml-auto text-[11px] text-ink-soft truncate">{draft.fontDisplay} + {draft.fontBody}</span>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {FONT_PAIRS.map((f) => {
             const sel = draft.fontDisplay === f.display && draft.fontBody === f.body
@@ -117,12 +97,12 @@ export function BrandStudio({ draft, onAccent, onFont, onRadius, customAccent, o
       </div>
 
       <div className="rounded-2xl border border-line bg-surface p-5 space-y-4">
-        <h4 className="font-display text-sm font-bold text-ink flex items-center gap-2">
-          <BoxSelect className="h-4 w-4 text-signal" /> Radius & Density — Global
-        </h4>
-        <p className="text-ink-soft text-xs -mt-1">
-          Corner radius for cards, inputs, and buttons. Current: <code className="text-signal">{draft.radius}</code>
-        </p>
+        <div className="flex items-center gap-2 flex-wrap">
+          <h4 className="font-display text-sm font-bold text-ink flex items-center gap-2">
+            <BoxSelect className="h-4 w-4 text-signal" /> Radius
+          </h4>
+          <span className="ml-auto text-[11px] font-mono text-ink">{draft.radius}</span>
+        </div>
         <div className="grid grid-cols-5 gap-2">
           {RADIUS_PRESETS.map((r) => {
             const sel = draft.radius === r.md

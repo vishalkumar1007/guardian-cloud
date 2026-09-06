@@ -287,7 +287,7 @@ export function SuperSidebar({ collapsed, onToggleCollapse, onMobileClose }: Sup
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden py-2 font-mono text-xs">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden py-2 font-mono text-xs g-sidebar-scroll">
         {!collapsed && prefs.favorites.length > 0 && (
           <div className="mx-2 mb-2 rounded-xl border border-signal/20 bg-signal/5 p-2">
             <div className="flex items-center gap-1.5 px-1 pb-1 text-[10px] font-bold text-signal uppercase tracking-wide"><Star className="h-3 w-3 fill-signal text-signal" /> Favorites</div>

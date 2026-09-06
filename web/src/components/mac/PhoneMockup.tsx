@@ -95,8 +95,8 @@ export function PhoneMockup({ mode, onActionTrigger, lastPingFromMac }: PhoneMoc
   }
 
   return (
-    <div className="relative mx-auto w-full max-w-[302px] select-none">
-      <div className="relative rounded-[54px] border-[3px] bg-[#f1f2f6] p-[10px] shadow-[0_24px_64px_rgba(15,16,32,0.18),0_8px_24px_rgba(15,16,32,0.12),inset_0_1px_1px_rgba(255,255,255,0.9)] dark:bg-[#151a25] dark:border-[#2a3441] dark:shadow-[0_32px_80px_rgba(0,0,0,0.6),0_12px_32px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.06)] border-[#d1d5db]">
+    <div className="relative g-device-chrome g-iphone-frame select-none">
+      <div className="relative g-iphone-chassis border-[3px] bg-[#f1f2f6] shadow-[0_24px_64px_rgba(15,16,32,0.18),0_8px_24px_rgba(15,16,32,0.12),inset_0_1px_1px_rgba(255,255,255,0.9)] dark:bg-[#151a25] dark:border-[#2a3441] dark:shadow-[0_32px_80px_rgba(0,0,0,0.6),0_12px_32px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.06)] border-[#d1d5db]">
         <div className="absolute -left-[3px] top-[68px] h-[28px] w-[3px] rounded-l-[2px] bg-[#e2a63a] dark:bg-[#3a4558] shadow-sm" title="Action button" />
         <div className="absolute -left-[3px] top-[106px] h-[32px] w-[3px] rounded-l-[2px] bg-[#d1d5db] dark:bg-[#2a3441] border-y border-l border-white/20 dark:border-white/5" />
         <div className="absolute -left-[3px] top-[144px] h-[32px] w-[3px] rounded-l-[2px] bg-[#d1d5db] dark:bg-[#2a3441] border-y border-l border-white/20 dark:border-white/5" />
@@ -104,10 +104,10 @@ export function PhoneMockup({ mode, onActionTrigger, lastPingFromMac }: PhoneMoc
         <div className="absolute -right-[3px] top-[206px] h-[46px] w-[3px] rounded-r-[3px] bg-[#1a1f2e] dark:bg-[#0a0e1a] border border-white/10 shadow-inner flex items-center justify-center" title="Camera Control">
           <span className="h-[36px] w-[2px] rounded-full bg-white/15" />
         </div>
-        <div className="pointer-events-none absolute inset-[10px] rounded-[44px] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]" />
+        <div className="pointer-events-none absolute inset-[10px] g-iphone-bezel-inset shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]" />
 
-        <div className="relative flex h-[550px] w-full flex-col overflow-hidden rounded-[44px] border-[7px] border-white bg-white shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)] dark:border-black dark:bg-black dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]">
-          <div className="pointer-events-none absolute inset-0 rounded-[36px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.6)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]" />
+        <div className="relative flex g-iphone-screen flex-col overflow-hidden border-[7px] border-white bg-white shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)] dark:border-black dark:bg-black dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]">
+          <div className="pointer-events-none absolute inset-0 g-iphone-glass shadow-[inset_0_1px_1px_rgba(255,255,255,0.6)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]" />
           <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-signal/5 blur-2xl" />
 
           <div className="relative flex h-[32px] shrink-0 items-center justify-between px-7 pt-1.5 text-[11px] font-semibold">

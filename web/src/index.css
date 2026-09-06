@@ -130,3 +130,17 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Super-admin side nav: hide / transparent scrollbar (scroll still works) */
+.g-sidebar-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.g-sidebar-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+.g-sidebar-scroll::-webkit-scrollbar-thumb {
+  background: transparent;
+}
