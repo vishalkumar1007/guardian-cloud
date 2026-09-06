@@ -11,11 +11,15 @@ import { StatusBadge } from '../../../components/admin/StatusBadge'
 export function SubscriptionsPage() {
   const [searchParams] = useSearchParams()
   const statusParam = searchParams.get('status')
+  const customerTypeParam = searchParams.get('customerType')
 
   const subscriptions = useAdminData(() => {
-    const list = adminService.getSubscriptions()
+    let list = adminService.getSubscriptions()
+    if (customerTypeParam) {
+      list = list.filter((s) => s.customerType === customerTypeParam)
+    }
     if (statusParam) {
-      return list.filter((s) => s.status.toUpperCase() === statusParam.toUpperCase())
+      list = list.filter((s) => s.status.toUpperCase() === statusParam.toUpperCase())
     }
     return list
   })
@@ -118,16 +122,23 @@ export function SubscriptionsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-xl font-bold tracking-tight text-ink flex items-center gap-2">
-            <CreditCard className="h-5 w-5 text-signal" />
-            Active Subscriptions & Licenses
-            {statusParam && (
-              <span className="text-xs font-mono text-ink-soft uppercase font-normal">
-                / {statusParam}
+            {customerTypeParam === 'PERSONAL' ? <User className="h-5 w-5 text-sky-500" /> : customerTypeParam === 'ORGANIZATION' ? <Building2 className="h-5 w-5 text-orange-500" /> : <CreditCard className="h-5 w-5 text-signal" />}
+            {customerTypeParam === 'PERSONAL' ? 'Personal Subscriptions' : customerTypeParam === 'ORGANIZATION' ? 'Enterprise Subscriptions' : 'Active Subscriptions & Licenses'}
+            {customerTypeParam && (
+              <span className="rounded-full border border-line bg-surface-2 px-2 py-0.5 text-xs font-mono font-semibold text-ink">
+                {customerTypeParam}
               </span>
+            )}
+            {statusParam && (
+              <span className="text-xs font-mono text-ink-soft uppercase font-normal">/ {statusParam}</span>
             )}
           </h1>
           <p className="text-xs text-ink-soft font-mono mt-0.5">
-            Real-time MRR, seat allocations, billing renewal cycles, and invoice statuses.
+            {customerTypeParam === 'PERSONAL'
+              ? 'B2C personal licenses — per-user MRR, device allocation, and renewal.'
+              : customerTypeParam === 'ORGANIZATION'
+                ? 'B2B enterprise subscriptions — pooled seats, fleet quotas, and org MRR.'
+                : 'Real-time MRR, seat allocations, billing renewal cycles, and invoice statuses.'}
           </p>
         </div>
       </div>

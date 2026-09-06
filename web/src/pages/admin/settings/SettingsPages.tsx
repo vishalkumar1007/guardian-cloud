@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Save, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { Save, CheckCircle2 } from 'lucide-react'
 import { useAdminData } from '../../../hooks/useAdminData'
 import { adminService } from '../../../services/adminService'
 import { ConfirmDialog } from '../../../components/admin/ConfirmDialog'
 import { ThemeAppearanceSettings } from './ThemeAppearanceSettings'
+import { GeneralSaaSForm } from './GeneralSaaSForm'
 import { cn } from '../../../lib/utils'
 
 export function SettingsPages() {
@@ -13,15 +14,15 @@ export function SettingsPages() {
   if (section === 'appearance' || section === 'theme') {
     return <ThemeAppearanceSettings />
   }
+  if (section === 'general') {
+    return <GeneralSaaSForm />
+  }
 
   const settings = useAdminData(() => adminService.getSettings())
 
   const [savedSuccess, setSavedSuccess] = useState(false)
   const [dangerConfirmOpen, setDangerConfirmOpen] = useState(false)
 
-  // Local form state
-  const [portalName, setPortalName] = useState(settings.general.portalName)
-  const [supportEmail, setSupportEmail] = useState(settings.general.supportEmail)
   const [mfaEnforced, setMfaEnforced] = useState(settings.security.mfaEnforcedForAdmins)
   const [sessionTimeout, setSessionTimeout] = useState(settings.security.sessionTimeoutMinutes)
   const [ssoEnabled, setSsoEnabled] = useState(settings.authentication.ssoEnabled)
@@ -34,9 +35,7 @@ export function SettingsPages() {
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault()
-    if (section === 'general') {
-      adminService.updateSettings('general', { portalName, supportEmail })
-    } else if (section === 'security') {
+    if (section === 'security') {
       adminService.updateSettings('security', { mfaEnforcedForAdmins: mfaEnforced, sessionTimeoutMinutes: sessionTimeout })
     } else if (section === 'authentication') {
       adminService.updateSettings('authentication', { ssoEnabled, samlSsoUrl })
@@ -75,34 +74,6 @@ export function SettingsPages() {
       )}
 
       <form onSubmit={handleSave} className="p-5 rounded-2xl border border-line bg-surface space-y-5 shadow-xl">
-        {/* Section: General */}
-        {section === 'general' && (
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-display text-base font-bold text-ink">General Platform Settings</h3>
-              <p className="text-ink-soft text-xs mt-0.5">Control plane branding, alert contacts, and multi-tenant scoping.</p>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-ink font-semibold block">Control Plane Portal Name</label>
-              <input
-                value={portalName}
-                onChange={(e) => setPortalName(e.target.value)}
-                className="w-full rounded-xl border border-line bg-surface-2 p-2.5 text-ink"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-ink font-semibold block">Central Support Email</label>
-              <input
-                value={supportEmail}
-                onChange={(e) => setSupportEmail(e.target.value)}
-                className="w-full rounded-xl border border-line bg-surface-2 p-2.5 text-ink"
-              />
-            </div>
-          </div>
-        )}
-
         {/* Section: Security */}
         {section === 'security' && (
           <div className="space-y-4">

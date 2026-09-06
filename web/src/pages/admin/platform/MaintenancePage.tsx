@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Calendar, Plus, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { Calendar, Plus } from 'lucide-react'
 import { useAdminData } from '../../../hooks/useAdminData'
 import { adminService } from '../../../services/adminService'
 import { StatusBadge } from '../../../components/admin/StatusBadge'
@@ -32,11 +32,9 @@ export function MaintenancePage() {
         <div>
           <h1 className="font-display text-xl font-bold tracking-tight text-ink flex items-center gap-2">
             <Calendar className="h-5 w-5 text-signal" />
-            Scheduled Infrastructure Maintenance Windows
+            Maintenance & Ops Calendar
           </h1>
-          <p className="text-ink-soft mt-0.5">
-            Zero-downtime database schema migrations, edge SSL rotations, and microservice upgrades.
-          </p>
+          <p className="text-ink-soft mt-0.5">Mock ops calendar — windows are in-memory, ICS export simulated. Notice lead from General settings.</p>
         </div>
 
         <button

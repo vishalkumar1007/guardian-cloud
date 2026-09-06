@@ -1,5 +1,5 @@
-import React from 'react'
-import { Package, ToggleLeft, ToggleRight, Download, CheckCircle2 } from 'lucide-react'
+import React, { useState } from 'react'
+import { Package } from 'lucide-react'
 import { useAdminData } from '../../../hooks/useAdminData'
 import { adminService } from '../../../services/adminService'
 import { StatusBadge } from '../../../components/admin/StatusBadge'
@@ -11,16 +11,23 @@ export function AgentReleasesPage() {
     adminService.toggleAgentMinSupported(releaseId)
   }
 
+  const [channel, setChannel] = useState<'ALL' | 'STABLE' | 'BETA'>('ALL')
+  const filtered = channel === 'ALL' ? releases : releases.filter((r) => (channel === 'STABLE' ? r.status === 'ACTIVE' : r.status === 'ROLLING_OUT'))
   return (
     <div className="space-y-6 font-mono text-xs">
-      <div>
-        <h1 className="font-display text-xl font-bold tracking-tight text-ink flex items-center gap-2">
-          <Package className="h-5 w-5 text-signal" />
-          Guardian Endpoint Agent Release Channels
-        </h1>
-        <p className="text-ink-soft mt-0.5">
-          macOS, Windows, and Linux client binaries, adoption rollouts, code-signing verification, and minimum supported version gates.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-xl font-bold tracking-tight text-ink flex items-center gap-2">
+            <Package className="h-5 w-5 text-signal" />
+            Agent Fleet & Release Channels
+          </h1>
+          <p className="text-ink-soft mt-0.5">Mock channels (stable/beta) + staged rollout slider — audit-logged, no binary push.</p>
+        </div>
+        <div className="flex items-center gap-1 p-1 rounded-xl border border-line bg-surface-2">
+          {(['ALL', 'STABLE', 'BETA'] as const).map((c) => (
+            <button key={c} type="button" onClick={() => setChannel(c)} className={`px-2.5 py-1 rounded-lg text-[11px] ${channel === c ? 'bg-signal text-white' : 'text-ink-soft hover:text-ink'}`}>{c}</button>
+          ))}
+        </div>
       </div>
 
       <div className="rounded-xl border border-line bg-surface overflow-hidden shadow-xl">
@@ -37,7 +44,7 @@ export function AgentReleasesPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-line text-ink">
-            {releases.map((rel) => (
+            {filtered.map((rel) => (
               <tr key={rel.id} className="hover:bg-surface-2/30">
                 <td className="py-3 px-4 font-bold text-signal">{rel.version}</td>
                 <td className="py-3 px-4 text-ink font-semibold">[{rel.platform}]</td>

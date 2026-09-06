@@ -1,23 +1,35 @@
-import React from 'react'
-import { Server, ExternalLink } from 'lucide-react'
+import React, { useState } from 'react'
+import { Server } from 'lucide-react'
 import { useAdminData } from '../../../hooks/useAdminData'
 import { adminService } from '../../../services/adminService'
 import { StatusBadge } from '../../../components/admin/StatusBadge'
 
 export function ServicesPage() {
   const services = useAdminData(() => adminService.getServicesHealth())
+  const [env, setEnv] = useState<'ALL' | 'PRODUCTION' | 'STAGING'>('ALL')
+  const [toast, setToast] = useState<string | null>(null)
+  function mockAction(name: string, action: string) {
+    setToast(`[Mock] ${action} ${name} — audit logged`)
+    setTimeout(() => setToast(null), 2500)
+  }
 
   return (
     <div className="space-y-6 font-mono text-xs">
-      <div>
-        <h1 className="font-display text-xl font-bold tracking-tight text-ink flex items-center gap-2">
-          <Server className="h-5 w-5 text-signal" />
-          Internal Microservice Architecture Inventory
-        </h1>
-        <p className="text-ink-soft mt-0.5">
-          Comprehensive inventory of core daemon containers, ingress controllers, and storage partitions.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-xl font-bold tracking-tight text-ink flex items-center gap-2">
+            <Server className="h-5 w-5 text-signal" />
+            Services & Infrastructure
+          </h1>
+          <p className="text-ink-soft mt-0.5">Mock microservice inventory — restart/scale actions are simulated, audit-logged.</p>
+        </div>
+        <div className="flex items-center gap-1 p-1 rounded-xl border border-line bg-surface-2">
+          {(['ALL', 'PRODUCTION', 'STAGING'] as const).map((e) => (
+            <button key={e} type="button" onClick={() => setEnv(e)} className={`px-2.5 py-1 rounded-lg text-[11px] ${env === e ? 'bg-signal text-white' : 'text-ink-soft hover:text-ink'}`}>{e}</button>
+          ))}
+        </div>
       </div>
+      {toast && <div className="p-2.5 rounded-xl border border-amber-800/50 bg-amber-950/30 text-amber-300 text-xs">{toast}</div>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {services.map((srv) => (
@@ -40,6 +52,10 @@ export function ServicesPage() {
                 <span className="text-ink-soft">Uptime:</span>
                 <span className="text-emerald-400 font-bold">{srv.uptimePercent}%</span>
               </div>
+            </div>
+            <div className="flex items-center gap-1.5 pt-2">
+              <button type="button" onClick={() => mockAction(srv.name, 'Restart')} className="flex-1 py-1.5 rounded-lg border border-line bg-surface-2 text-ink hover:bg-surface text-xs">Restart</button>
+              <button type="button" onClick={() => mockAction(srv.name, 'Scale')} className="flex-1 py-1.5 rounded-lg bg-signal text-white text-xs">Scale</button>
             </div>
           </div>
         ))}
