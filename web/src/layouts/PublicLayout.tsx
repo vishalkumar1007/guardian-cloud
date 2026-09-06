@@ -132,7 +132,7 @@ export function PublicLayout() {
               <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-ink">Appearance</p>
               <p className="mt-4 text-sm leading-relaxed text-ink-soft">Sun / moon in the nav toggles light and dark. Saved on this device and synced to your theme.</p>
               <div className="mt-4 flex items-center gap-2 rounded-full border border-line bg-mist/30 px-3 py-2 w-fit">
-                <span className={`h-2 w-2 rounded-full ${isDark ? 'bg-signal' : 'bg-amber-500'}`} />
+                <span className="h-2 w-2 rounded-full bg-signal" />
                 <span className="font-mono text-xs text-ink-soft">{isDark ? 'Dark mode' : 'Light mode'} active</span>
               </div>
             </div>

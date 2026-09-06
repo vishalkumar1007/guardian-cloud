@@ -1,26 +1,32 @@
-import React from 'react'
-import { SlidersHorizontal, CheckCircle2, AlertCircle } from 'lucide-react'
+import React, { useState } from 'react'
+import { SlidersHorizontal } from 'lucide-react'
 import { useAdminData } from '../../../hooks/useAdminData'
 import { adminService } from '../../../services/adminService'
 import { cn } from '../../../lib/utils'
 
 export function FeatureFlagsPage() {
   const flags = useAdminData(() => adminService.getFeatureFlags())
-
+  const [env, setEnv] = useState<'ALL' | 'PRODUCTION' | 'STAGING'>('ALL')
   function handleToggle(flagId: string) {
     adminService.toggleFeatureFlag(flagId)
   }
+  const filtered = env === 'ALL' ? flags : flags.filter((f) => f.environment === env || f.environment === 'ALL')
 
   return (
     <div className="space-y-6 font-mono text-xs">
-      <div>
-        <h1 className="font-display text-xl font-bold tracking-tight text-ink flex items-center gap-2">
-          <SlidersHorizontal className="h-5 w-5 text-signal" />
-          Platform Operational Feature Flags
-        </h1>
-        <p className="text-ink-soft mt-0.5">
-          Dynamic runtime toggles, autonomous containment overrides, eBPF heuristics, and progressive rollout percentages.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-xl font-bold tracking-tight text-ink flex items-center gap-2">
+            <SlidersHorizontal className="h-5 w-5 text-signal" />
+            Feature Flags & Experiments
+          </h1>
+          <p className="text-ink-soft mt-0.5">Mock governance — toggles are in-memory, audit-logged. No real rollout.</p>
+        </div>
+        <div className="flex items-center gap-1 p-1 rounded-xl border border-line bg-surface-2">
+          {(['ALL', 'PRODUCTION', 'STAGING'] as const).map((e) => (
+            <button key={e} type="button" onClick={() => setEnv(e)} className={`px-2.5 py-1 rounded-lg text-[11px] ${env === e ? 'bg-signal text-white' : 'text-ink-soft hover:text-ink'}`}>{e}</button>
+          ))}
+        </div>
       </div>
 
       <div className="rounded-xl border border-line bg-surface overflow-hidden shadow-xl">
@@ -36,7 +42,7 @@ export function FeatureFlagsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-line text-ink">
-            {flags.map((flag) => (
+            {filtered.map((flag) => (
               <tr key={flag.id} className="hover:bg-surface-2/30">
                 <td className="py-3 px-4">
                   <span className="font-bold text-ink block">{flag.name}</span>

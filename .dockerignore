@@ -1,0 +1,10 @@
+.git
+.gitignore
+web/node_modules
+web/dist
+bin
+tmp
+*.log
+.env
+**/.DS_Store
+graphify-out

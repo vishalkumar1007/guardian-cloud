@@ -23,6 +23,7 @@ import {
 const SCHEME_KEY = 'guardian-color-scheme'
 const THEME_KEY = 'guardian-theme'
 const LEGACY_SAVED_KEY = 'guardian-saved-theme'
+const THEME_DB_ONLY = true
 
 export type ThemeContextValue = {
   theme: PlatformTheme
@@ -50,6 +51,7 @@ function platformToken() {
 }
 
 function readLocalScheme(): ColorScheme | null {
+  if (THEME_DB_ONLY) return null
   try {
     const v = localStorage.getItem(SCHEME_KEY)
     return v === 'light' || v === 'dark' ? v : null
@@ -59,6 +61,7 @@ function readLocalScheme(): ColorScheme | null {
 }
 
 function readSavedTheme(): PlatformTheme | null {
+  if (THEME_DB_ONLY) return null
   try {
     const raw = localStorage.getItem(THEME_KEY) || localStorage.getItem(LEGACY_SAVED_KEY)
     if (!raw) return null
@@ -71,6 +74,7 @@ function readSavedTheme(): PlatformTheme | null {
 }
 
 function persistTheme(tokens: ThemeTokens) {
+  if (THEME_DB_ONLY) return
   try {
     localStorage.setItem(THEME_KEY, JSON.stringify(tokens))
     localStorage.setItem(SCHEME_KEY, tokens.colorScheme)
@@ -78,6 +82,7 @@ function persistTheme(tokens: ThemeTokens) {
 }
 
 function withLocalScheme(remote: PlatformTheme): PlatformTheme {
+  if (THEME_DB_ONLY) return remote
   const local = readLocalScheme()
   if (!local || local === remote.colorScheme) return remote
   const applied = applySchemeToTheme(remote, local)
@@ -188,16 +193,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [theme])
 
   const setLocalScheme = useCallback((scheme: ColorScheme | null) => {
-    try {
-      if (scheme) {
-        localStorage.setItem(SCHEME_KEY, scheme)
-      } else {
-        localStorage.removeItem(SCHEME_KEY)
-        const saved = readSavedTheme()
-        if (saved) localStorage.setItem(SCHEME_KEY, saved.colorScheme)
-      }
-    } catch {}
-    const nextScheme = scheme || readSavedTheme()?.colorScheme || null
+    if (!THEME_DB_ONLY) {
+      try {
+        if (scheme) {
+          localStorage.setItem(SCHEME_KEY, scheme)
+        } else {
+          localStorage.removeItem(SCHEME_KEY)
+          const saved = readSavedTheme()
+          if (saved) localStorage.setItem(SCHEME_KEY, saved.colorScheme)
+        }
+      } catch {}
+    }
+    const nextScheme = scheme || (!THEME_DB_ONLY ? readSavedTheme()?.colorScheme : null) || null
     setLocalSchemeState(scheme)
     setTheme((prev) => {
       const target = scheme || prev.colorScheme || 'dark'
@@ -210,12 +217,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const applyLocal = useCallback((tokens: ThemeTokens, version?: number) => {
-    applyThemeTokens(tokens)
+    // Force so Brand Studio edits paint when Following Brand (dashboard owns doc).
+    // No-op on document while Enable Custom — personalDashboardOwnsTheme blocks Brand paints.
+    applyThemeTokens(tokens, { force: true })
     persistTheme(tokens)
-    try {
-      localStorage.setItem(SCHEME_KEY, tokens.colorScheme)
+    if (!THEME_DB_ONLY) {
+      try {
+        localStorage.setItem(SCHEME_KEY, tokens.colorScheme)
+        setLocalSchemeState(tokens.colorScheme)
+      } catch {}
+    } else {
       setLocalSchemeState(tokens.colorScheme)
-    } catch {}
+    }
     setTheme((prev) => ({
       ...tokens,
       version: version ?? prev.version,
@@ -229,26 +242,36 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       const effective = withLocalScheme(remote)
       applyThemeTokens(effective)
       persistTheme(effective)
-      try {
-        localStorage.setItem(SCHEME_KEY, effective.colorScheme)
-        setLocalSchemeState(readLocalScheme())
-      } catch {}
+      if (!THEME_DB_ONLY) {
+        try {
+          localStorage.setItem(SCHEME_KEY, effective.colorScheme)
+          setLocalSchemeState(readLocalScheme())
+        } catch {}
+      } else {
+        setLocalSchemeState(effective.colorScheme)
+      }
       versionRef.current = effective.version
       setTheme(effective)
       setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'theme unavailable')
-      const saved = readSavedTheme()
-      if (saved) {
-        const local = readLocalScheme()
-        const fallback = local && local !== saved.colorScheme ? applySchemeToTheme(saved, local) : saved
+      if (THEME_DB_ONLY) {
+        const fallback = WATCHLINE_DEFAULTS
         applyThemeTokens(fallback as PlatformTheme)
         setTheme({ ...(fallback as PlatformTheme), version: versionRef.current } as PlatformTheme)
       } else {
-        const local = readLocalScheme() || 'dark'
-        const fallback = applySchemeToTheme(WATCHLINE_DEFAULTS, local)
-        applyThemeTokens(fallback)
-        setTheme({ ...fallback, version: 0 })
+        const saved = readSavedTheme()
+        if (saved) {
+          const local = readLocalScheme()
+          const fallback = local && local !== saved.colorScheme ? applySchemeToTheme(saved, local) : saved
+          applyThemeTokens(fallback as PlatformTheme)
+          setTheme({ ...(fallback as PlatformTheme), version: versionRef.current } as PlatformTheme)
+        } else {
+          const local = readLocalScheme() || 'dark'
+          const fallback = applySchemeToTheme(WATCHLINE_DEFAULTS, local)
+          applyThemeTokens(fallback)
+          setTheme({ ...fallback, version: 0 })
+        }
       }
     } finally {
       setLoading(false)
@@ -262,16 +285,19 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     persistTheme(effective)
     versionRef.current = effective.version
     setTheme(effective)
-    setLocalSchemeState(readLocalScheme())
+    if (!THEME_DB_ONLY) setLocalSchemeState(readLocalScheme())
+    else setLocalSchemeState(effective.colorScheme)
     setError(null)
   }, [])
 
   const resetDefaults = useCallback(async () => {
-    try {
-      localStorage.removeItem(SCHEME_KEY)
-      localStorage.removeItem(THEME_KEY)
-      localStorage.removeItem(LEGACY_SAVED_KEY)
-    } catch {}
+    if (!THEME_DB_ONLY) {
+      try {
+        localStorage.removeItem(SCHEME_KEY)
+        localStorage.removeItem(THEME_KEY)
+        localStorage.removeItem(LEGACY_SAVED_KEY)
+      } catch {}
+    }
     setLocalSchemeState(null)
     await save(WATCHLINE_DEFAULTS)
   }, [save])
@@ -282,9 +308,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         const next = applySchemeToTheme(prev, scheme)
         applyThemeTokens(next)
         persistTheme(next)
-        try {
-          localStorage.setItem(SCHEME_KEY, scheme)
-        } catch {}
+        if (!THEME_DB_ONLY) {
+          try {
+            localStorage.setItem(SCHEME_KEY, scheme)
+          } catch {}
+        }
         setLocalSchemeState(scheme)
         return { ...next, version: prev.version, updatedAt: prev.updatedAt }
       })
@@ -295,9 +323,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const toggleColorMode = useCallback(() => {
     setTheme((prev) => {
       const nextScheme: ColorScheme = prev.colorScheme === 'dark' ? 'light' : 'dark'
-      try {
-        localStorage.setItem(SCHEME_KEY, nextScheme)
-      } catch {}
+      if (!THEME_DB_ONLY) {
+        try {
+          localStorage.setItem(SCHEME_KEY, nextScheme)
+        } catch {}
+      }
       setLocalSchemeState(nextScheme)
       const nextTheme = applySchemeToTheme(prev, nextScheme)
       applyThemeTokens(nextTheme)
@@ -307,6 +337,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
+    if (THEME_DB_ONLY) return
     const handleStorage = (e: StorageEvent) => {
       if (e.key === SCHEME_KEY || e.key === THEME_KEY || e.key === LEGACY_SAVED_KEY) {
         const val = readLocalScheme()
@@ -334,22 +365,42 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     applyThemeTokens(theme)
     void refresh()
-    const id = window.setInterval(() => {
-      void (async () => {
-        try {
-          const remote = await fetchTheme()
-          if (remote.version === versionRef.current) return
-          versionRef.current = remote.version
-          const next = withLocalScheme(remote)
-          applyThemeTokens(next)
-          persistTheme(next)
-          setTheme(next)
-          setError(null)
-        } catch {}
-      })()
-    }, THEME_POLL_MS)
-    return () => window.clearInterval(id)
-  }, [refresh])
+
+    let cancelled = false
+    let timer: number | null = null
+    let delay = THEME_POLL_MS
+    const maxDelay = 60_000
+
+    const schedule = () => {
+      if (cancelled) return
+      timer = window.setTimeout(() => {
+        void (async () => {
+          try {
+            const remote = await fetchTheme()
+            delay = THEME_POLL_MS
+            if (remote.version !== versionRef.current) {
+              versionRef.current = remote.version
+              const next = withLocalScheme(remote)
+              applyThemeTokens(next)
+              persistTheme(next)
+              setTheme(next)
+              setError(null)
+            }
+          } catch {
+            delay = Math.min(maxDelay, Math.max(THEME_POLL_MS, delay * 2))
+          } finally {
+            schedule()
+          }
+        })()
+      }, delay)
+    }
+    schedule()
+
+    return () => {
+      cancelled = true
+      if (timer != null) window.clearTimeout(timer)
+    }
+  }, [])
 
   const value = useMemo(
     () => ({

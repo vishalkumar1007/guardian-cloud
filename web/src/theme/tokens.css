@@ -1,5 +1,8 @@
+/* Defaults only on document / dashboard shell — never on nested [data-theme] wrappers
+   (those would reset --g-radius / accent and block Personal Radius + packs). */
 :root,
-[data-theme="light"] {
+html[data-theme="light"],
+.g-dashboard-shell[data-theme="light"] {
   --g-ink: #0f172a;
   --g-ink-soft: #475569;
   --g-mist: #f6f7fb;
@@ -24,7 +27,7 @@
   --g-text: #0f172a;
   --g-text-2: #475569;
   --g-text-3: #94a3b8;
-  --g-glow: color-mix(in srgb, #6366f1 5%, transparent);
+  --g-glow: color-mix(in srgb, var(--g-accent) 8%, transparent);
   --g-grain: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.28'/%3E%3C/svg%3E");
   --g-card-shadow: 0 1px 2px rgba(15, 16, 32, 0.05), 0 8px 32px rgba(15, 16, 32, 0.06);
   --g-card-shadow-hover: 0 4px 16px rgba(15, 16, 32, 0.07), 0 16px 48px rgba(15, 16, 32, 0.07);
@@ -36,7 +39,8 @@
   --radius-lg: 22px;
 }
 
-[data-theme="dark"] {
+html[data-theme="dark"],
+.g-dashboard-shell[data-theme="dark"] {
   --g-ink: #f1f5f9;
   --g-ink-soft: #a2acc4;
   --g-mist: #0a0b14;
@@ -61,12 +65,12 @@
   --g-text: #f1f5f9;
   --g-text-2: #a2acc4;
   --g-text-3: #6b7590;
-  --g-glow: color-mix(in srgb, #6366f1 6%, transparent);
+  --g-glow: color-mix(in srgb, var(--g-accent) 10%, transparent);
   --g-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 40px rgba(0, 0, 0, 0.45);
   --g-card-shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.35), 0 20px 56px rgba(0, 0, 0, 0.4);
-  --accent: #6366f1;
-  --accent-2: #8b5cf6;
-  --accent-rgb: 99,102,241;
+  --accent: var(--g-accent);
+  --accent-2: var(--g-accent-2);
+  --accent-rgb: var(--g-accent-rgb);
   --radius: 14px;
   --radius-sm: 10px;
   --radius-lg: 22px;
@@ -74,16 +78,182 @@
 
 .g-atmosphere {
   background:
-    radial-gradient(700px 320px at 50% -6%, var(--g-glow), transparent 68%),
+    radial-gradient(640px 260px at 72% -8%, var(--g-glow), transparent 70%),
     linear-gradient(180deg, var(--g-mist) 0%, var(--g-mist-deep) 54%, var(--g-mist) 100%);
   color: var(--g-ink);
 }
 
-[data-theme="light"] .g-atmosphere {
+[data-theme="light"] .g-atmosphere,
+[data-theme="light"].g-atmosphere,
+.g-atmosphere[data-theme="light"] {
   background:
-    radial-gradient(700px 320px at 20% -10%, color-mix(in srgb, var(--g-accent) 9%, transparent), transparent 60%),
-    radial-gradient(800px 380px at 80% -12%, color-mix(in srgb, var(--g-accent-2) 7%, transparent), transparent 62%),
+    radial-gradient(560px 240px at 78% -10%, color-mix(in srgb, var(--g-accent) 7%, transparent), transparent 68%),
     linear-gradient(180deg, color-mix(in srgb, var(--g-mist) 94%, white), var(--g-mist) 70%, var(--g-mist-deep) 100%);
+}
+
+/* Atmosphere presets — neutral canvas + a light accent wash (not a full flood). */
+html[data-atmosphere="void"] .g-atmosphere,
+[data-atmosphere="void"] .g-atmosphere,
+[data-atmosphere="void"].g-atmosphere {
+  background:
+    radial-gradient(720px 280px at 78% -10%, color-mix(in srgb, var(--g-accent) 12%, transparent), transparent 70%),
+    linear-gradient(180deg, color-mix(in srgb, var(--g-mist) 96%, black) 0%, var(--g-mist) 45%, var(--g-mist-deep) 100%) !important;
+}
+html[data-atmosphere="mist"] .g-atmosphere,
+[data-atmosphere="mist"] .g-atmosphere,
+[data-atmosphere="mist"].g-atmosphere {
+  background:
+    radial-gradient(640px 260px at 80% -10%, color-mix(in srgb, var(--g-accent) 8%, transparent), transparent 68%),
+    linear-gradient(180deg, color-mix(in srgb, var(--g-mist) 92%, white) 0%, var(--g-mist) 55%, var(--g-mist-deep) 100%) !important;
+}
+html[data-atmosphere="obsidian"] .g-atmosphere,
+[data-atmosphere="obsidian"] .g-atmosphere,
+[data-atmosphere="obsidian"].g-atmosphere {
+  background:
+    radial-gradient(600px 240px at 75% -8%, color-mix(in srgb, var(--g-accent) 8%, transparent), transparent 68%),
+    linear-gradient(180deg, color-mix(in srgb, var(--g-mist) 90%, black) 0%, var(--g-mist) 55%, var(--g-mist-deep) 100%) !important;
+}
+html[data-atmosphere="obsidian"] .g-atmosphere::before,
+[data-atmosphere="obsidian"] .g-atmosphere::before,
+[data-atmosphere="obsidian"].g-atmosphere::before { opacity: 0.06 !important; }
+html[data-atmosphere="aurora"] .g-atmosphere,
+[data-atmosphere="aurora"] .g-atmosphere,
+[data-atmosphere="aurora"].g-atmosphere {
+  background:
+    radial-gradient(560px 260px at 18% -8%, color-mix(in srgb, var(--g-accent) 12%, transparent), transparent 68%),
+    radial-gradient(520px 240px at 88% -10%, color-mix(in srgb, var(--g-accent-2) 8%, transparent), transparent 70%),
+    linear-gradient(180deg, var(--g-mist) 0%, var(--g-mist-deep) 100%) !important;
+}
+html[data-atmosphere="nebula"] .g-atmosphere,
+[data-atmosphere="nebula"] .g-atmosphere,
+[data-atmosphere="nebula"].g-atmosphere {
+  background:
+    radial-gradient(560px 260px at 20% -6%, color-mix(in srgb, var(--g-accent-2) 10%, transparent), transparent 68%),
+    radial-gradient(520px 240px at 85% -8%, color-mix(in srgb, var(--g-accent) 8%, transparent), transparent 70%),
+    linear-gradient(180deg, var(--g-mist) 0%, var(--g-mist-deep) 100%) !important;
+}
+html[data-atmosphere="ember"] .g-atmosphere,
+[data-atmosphere="ember"] .g-atmosphere,
+[data-atmosphere="ember"].g-atmosphere {
+  background:
+    radial-gradient(560px 260px at 28% -8%, color-mix(in srgb, var(--g-accent) 10%, transparent), transparent 68%),
+    linear-gradient(180deg, var(--g-mist) 0%, var(--g-mist-deep) 100%) !important;
+}
+html[data-atmosphere="ocean"] .g-atmosphere,
+[data-atmosphere="ocean"] .g-atmosphere,
+[data-atmosphere="ocean"].g-atmosphere {
+  background:
+    radial-gradient(560px 260px at 22% -8%, color-mix(in srgb, var(--g-accent) 10%, transparent), transparent 68%),
+    linear-gradient(180deg, var(--g-mist) 0%, var(--g-mist-deep) 100%) !important;
+}
+html[data-atmosphere="grid"] .g-atmosphere,
+[data-atmosphere="grid"] .g-atmosphere,
+[data-atmosphere="grid"].g-atmosphere {
+  background:
+    linear-gradient(rgba(var(--g-accent-rgb), 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--g-accent-rgb), 0.04) 1px, transparent 1px),
+    radial-gradient(560px 240px at 70% -8%, color-mix(in srgb, var(--g-accent) 8%, transparent), transparent 70%),
+    linear-gradient(180deg, var(--g-mist) 0%, var(--g-mist-deep) 100%) !important;
+  background-size: 32px 32px, 32px 32px, auto, auto !important;
+}
+html[data-atmosphere="grid"] .g-atmosphere::before,
+[data-atmosphere="grid"] .g-atmosphere::before,
+[data-atmosphere="grid"].g-atmosphere::before { opacity: 0.05 !important; }
+html[data-atmosphere="snow"] .g-atmosphere,
+[data-atmosphere="snow"] .g-atmosphere,
+[data-atmosphere="snow"].g-atmosphere {
+  background:
+    radial-gradient(560px 240px at 70% -8%, color-mix(in srgb, var(--g-accent) 6%, transparent), transparent 70%),
+    linear-gradient(180deg, var(--g-mist) 0%, var(--g-mist-deep) 100%) !important;
+}
+html[data-atmosphere="snow"] .g-atmosphere::after,
+[data-atmosphere="snow"] .g-atmosphere::after,
+[data-atmosphere="snow"].g-atmosphere::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.55;
+  background-image:
+    radial-gradient(1.6px 1.6px at 12% 8%, white 70%, transparent),
+    radial-gradient(1.2px 1.2px at 28% 22%, white 70%, transparent),
+    radial-gradient(1.8px 1.8px at 44% 14%, white 70%, transparent),
+    radial-gradient(1.1px 1.1px at 62% 28%, white 70%, transparent),
+    radial-gradient(1.4px 1.4px at 78% 10%, white 70%, transparent),
+    radial-gradient(1.3px 1.3px at 88% 32%, white 70%, transparent),
+    radial-gradient(1px 1px at 20% 55%, white 70%, transparent),
+    radial-gradient(1.5px 1.5px at 52% 68%, white 70%, transparent);
+  animation: snowDrift 14s linear infinite;
+}
+@keyframes snowDrift {
+  0% { transform: translateY(-18px); }
+  100% { transform: translateY(18px); }
+}
+html[data-atmosphere="mesh"] .g-atmosphere,
+[data-atmosphere="mesh"] .g-atmosphere,
+[data-atmosphere="mesh"].g-atmosphere {
+  background:
+    radial-gradient(560px 260px at 22% -8%, color-mix(in srgb, var(--g-accent) 9%, transparent), transparent 68%),
+    radial-gradient(520px 240px at 85% -8%, color-mix(in srgb, var(--g-accent-2) 6%, transparent), transparent 70%),
+    linear-gradient(180deg, var(--g-mist) 0%, var(--g-mist-deep) 100%) !important;
+}
+html[data-atmosphere="starfield"] .g-atmosphere,
+[data-atmosphere="starfield"] .g-atmosphere,
+[data-atmosphere="starfield"].g-atmosphere {
+  background:
+    radial-gradient(1.4px 1.4px at 10% 14%, white 70%, transparent),
+    radial-gradient(1px 1px at 32% 28%, rgba(255,255,255,0.8) 70%, transparent),
+    radial-gradient(1.2px 1.2px at 58% 18%, white 70%, transparent),
+    radial-gradient(1px 1px at 78% 42%, white 70%, transparent),
+    radial-gradient(1.6px 1.6px at 88% 22%, white 70%, transparent),
+    radial-gradient(520px 220px at 70% -8%, color-mix(in srgb, var(--g-accent) 6%, transparent), transparent 72%),
+    linear-gradient(180deg, var(--g-mist) 0%, var(--g-mist-deep) 100%) !important;
+}
+html[data-atmosphere="starfield"] .g-atmosphere::before,
+[data-atmosphere="starfield"] .g-atmosphere::before,
+[data-atmosphere="starfield"].g-atmosphere::before { opacity: 0.08 !important; }
+html[data-atmosphere="daylight"] .g-atmosphere,
+[data-atmosphere="daylight"] .g-atmosphere,
+[data-atmosphere="daylight"].g-atmosphere {
+  background:
+    radial-gradient(560px 240px at 82% -8%, color-mix(in srgb, var(--g-accent) 7%, transparent), transparent 68%),
+    linear-gradient(180deg, color-mix(in srgb, var(--g-mist) 88%, white) 0%, var(--g-mist) 55%, var(--g-mist-deep) 100%) !important;
+}
+html[data-atmosphere="paper"] .g-atmosphere,
+[data-atmosphere="paper"] .g-atmosphere,
+[data-atmosphere="paper"].g-atmosphere {
+  background:
+    radial-gradient(560px 240px at 80% -8%, color-mix(in srgb, var(--g-accent) 7%, transparent), transparent 68%),
+    linear-gradient(180deg, color-mix(in srgb, var(--g-mist) 90%, white) 0%, var(--g-mist) 55%, var(--g-mist-deep) 100%) !important;
+}
+html[data-atmosphere="frost"] .g-atmosphere,
+[data-atmosphere="frost"] .g-atmosphere,
+[data-atmosphere="frost"].g-atmosphere {
+  background:
+    radial-gradient(560px 240px at 82% -8%, color-mix(in srgb, var(--g-accent) 7%, transparent), transparent 68%),
+    linear-gradient(180deg, color-mix(in srgb, var(--g-mist) 90%, white) 0%, var(--g-mist) 55%, var(--g-mist-deep) 100%) !important;
+}
+html[data-atmosphere="sunrise"] .g-atmosphere,
+[data-atmosphere="sunrise"] .g-atmosphere,
+[data-atmosphere="sunrise"].g-atmosphere {
+  background:
+    radial-gradient(560px 240px at 78% -8%, color-mix(in srgb, var(--g-accent) 8%, transparent), transparent 68%),
+    linear-gradient(180deg, color-mix(in srgb, var(--g-mist) 90%, white) 0%, var(--g-mist) 55%, var(--g-mist-deep) 100%) !important;
+}
+html[data-atmosphere="lagoon"] .g-atmosphere,
+[data-atmosphere="lagoon"] .g-atmosphere,
+[data-atmosphere="lagoon"].g-atmosphere {
+  background:
+    radial-gradient(560px 240px at 80% -8%, color-mix(in srgb, var(--g-accent) 7%, transparent), transparent 68%),
+    linear-gradient(180deg, color-mix(in srgb, var(--g-mist) 90%, white) 0%, var(--g-mist) 55%, var(--g-mist-deep) 100%) !important;
+}
+html[data-atmosphere="blush"] .g-atmosphere,
+[data-atmosphere="blush"] .g-atmosphere,
+[data-atmosphere="blush"].g-atmosphere {
+  background:
+    radial-gradient(560px 240px at 80% -8%, color-mix(in srgb, var(--g-accent) 7%, transparent), transparent 68%),
+    linear-gradient(180deg, color-mix(in srgb, var(--g-mist) 90%, white) 0%, var(--g-mist) 55%, var(--g-mist-deep) 100%) !important;
 }
 
 .g-atmosphere::before {
@@ -96,8 +266,150 @@
   z-index: 0;
 }
 
-[data-theme="dark"] .g-atmosphere::before {
+[data-theme="dark"] .g-atmosphere::before,
+[data-theme="dark"].g-atmosphere::before,
+.g-atmosphere[data-theme="dark"]::before {
   opacity: 0.04;
+}
+
+/* Dashboard: neutral canvas + light Brand accent wash at the top only */
+.g-dashboard-shell {
+  position: relative;
+  isolation: isolate;
+  font-family: var(--g-font-body) !important;
+}
+.g-dashboard-shell .font-display {
+  font-family: var(--g-font-display) !important;
+}
+.g-dashboard-shell .font-sans {
+  font-family: var(--g-font-body) !important;
+}
+.g-dashboard-shell .rounded-sm,
+.g-dashboard-shell .rounded {
+  border-radius: var(--g-radius-sm) !important;
+}
+.g-dashboard-shell .rounded-md,
+.g-dashboard-shell .rounded-lg,
+.g-dashboard-shell .rounded-xl {
+  border-radius: var(--g-radius) !important;
+}
+.g-dashboard-shell .rounded-2xl,
+.g-dashboard-shell .rounded-3xl {
+  border-radius: var(--g-radius-lg) !important;
+}
+.g-dashboard-shell .rounded-full {
+  border-radius: 9999px !important;
+}
+.g-dashboard-shell .g-card,
+.g-dashboard-shell [class*="rounded-["]:not([class*="rounded-full"]):not(.g-device-chrome):not(.g-device-chrome *) {
+  border-radius: var(--g-radius) !important;
+}
+
+.brand-studio-live {
+  font-family: var(--g-font-body);
+}
+.brand-studio-live .font-display {
+  font-family: var(--g-font-display) !important;
+}
+/* Light Brand/pack accent wash at top — does not replace data-atmosphere backgrounds */
+.g-dashboard-shell::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: min(200px, 26vh);
+  z-index: 0;
+  background: radial-gradient(
+    90% 140% at 50% -30%,
+    color-mix(in srgb, var(--g-accent) 18%, transparent),
+    transparent 72%
+  );
+}
+[data-theme="light"].g-dashboard-shell::after,
+.g-dashboard-shell[data-theme="light"]::after {
+  background: radial-gradient(
+    90% 140% at 50% -30%,
+    color-mix(in srgb, var(--g-accent) 12%, transparent),
+    transparent 72%
+  );
+}
+.g-dashboard-shell.g-atmosphere::before {
+  /* Keep grain subtle; atmosphere + top wash carry look */
+  opacity: 0.02;
+  position: absolute;
+  z-index: 0;
+}
+
+.g-dashboard-shell a:focus-visible,
+.g-dashboard-shell button:focus-visible,
+.g-dashboard-shell input:focus-visible,
+.g-dashboard-shell select:focus-visible,
+.g-dashboard-shell textarea:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--g-accent) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.rounded-sm { border-radius: var(--g-radius-sm) !important; }
+.rounded { border-radius: var(--g-radius-sm) !important; }
+.rounded-md { border-radius: var(--g-radius) !important; }
+.rounded-lg { border-radius: var(--g-radius) !important; }
+.rounded-xl { border-radius: var(--g-radius) !important; }
+.rounded-2xl { border-radius: var(--g-radius-lg) !important; }
+.rounded-3xl { border-radius: var(--g-radius-lg) !important; }
+/* Theme radius must not reshape hardware mockups (Mac / iPhone) */
+[class*="rounded-["]:not(.g-device-chrome):not(.g-device-chrome *) {
+  border-radius: var(--g-radius) !important;
+}
+
+/*
+ * Home-page device chrome — fixed to real MacBook Pro / iPhone Pro geometry.
+ * Never inherit Brand Studio / API --g-radius.
+ */
+.g-macbook-chassis {
+  border-radius: 24px !important; /* aluminum lid continuous curve */
+}
+.g-macbook-bezel-inset {
+  border-radius: 14px !important;
+}
+.g-macbook-screen {
+  border-radius: 12px !important; /* Liquid Retina display corners */
+}
+.g-macbook-display {
+  aspect-ratio: 3456 / 2234; /* MacBook Pro 16″ native */
+  min-height: 480px;
+  max-height: 560px;
+  width: 100%;
+}
+.g-macbook-glass {
+  border-radius: 6px !important;
+}
+.g-macbook-notch {
+  border-radius: 0 0 10px 10px !important;
+}
+
+.g-iphone-frame {
+  width: 100%;
+  max-width: 302px; /* ~71.5mm iPhone 16 Pro at mock scale */
+  margin-inline: auto;
+}
+.g-iphone-chassis {
+  border-radius: 55px !important; /* iPhone Pro continuous curve */
+  padding: 10px;
+}
+.g-iphone-bezel-inset {
+  border-radius: 47px !important;
+}
+.g-iphone-screen {
+  width: 100%;
+  /* Super Retina ~19.5:9 at ~268px inner width (302 frame − padding − bezel) */
+  height: 580px;
+  max-height: min(580px, 75vh);
+  border-radius: 47px !important;
+}
+.g-iphone-glass {
+  border-radius: 40px !important;
 }
 
 .g-card {

@@ -1,0 +1,4 @@
+# Convenience entrypoint so `docker compose up -d` works from repo root.
+# Canonical file: deployments/docker-compose.yml
+include:
+  - path: deployments/docker-compose.yml

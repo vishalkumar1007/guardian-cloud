@@ -6,6 +6,8 @@
 @theme {
   --font-display: var(--g-font-display, "Sora"), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-body: var(--g-font-body, "Inter"), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Route default UI text through Brand/dashboard body font */
+  --font-sans: var(--font-body);
   --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
   --color-ink: var(--g-ink);
   --color-ink-soft: var(--g-ink-soft);
@@ -17,6 +19,16 @@
   --color-line: var(--g-line);
   --color-surface: var(--g-surface);
   --color-surface-2: var(--g-surface-2);
+  --color-accent: var(--g-accent);
+  --color-accent-2: var(--g-accent-2);
+  /* Brand / dashboard radius — Following Brand updates --g-radius* live */
+  --radius-sm: var(--g-radius-sm, 10px);
+  --radius-md: var(--g-radius, 14px);
+  --radius-lg: var(--g-radius, 14px);
+  --radius-xl: var(--g-radius-lg, 22px);
+  --radius-2xl: var(--g-radius-lg, 22px);
+  --radius-3xl: var(--g-radius-lg, 22px);
+  --radius: var(--g-radius, 14px);
 }
 
 * {
@@ -117,4 +129,18 @@ body {
   * {
     scroll-behavior: auto !important;
   }
+}
+
+/* Super-admin side nav: hide / transparent scrollbar (scroll still works) */
+.g-sidebar-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.g-sidebar-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+.g-sidebar-scroll::-webkit-scrollbar-thumb {
+  background: transparent;
 }

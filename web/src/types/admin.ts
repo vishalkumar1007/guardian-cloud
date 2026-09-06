@@ -316,10 +316,29 @@ export interface MaintenanceWindow {
 export interface PlatformSettings {
   general: {
     portalName: string
+    companyLegalName: string
+    domainPrimary: string
+    platformUrl: string
+    logoUrl: string
+    faviconUrl: string
     supportEmail: string
+    supportPhone: string
     incidentAlertEmail: string
+    statusPageUrl: string
+    legalFooter: string
+    termsUrl: string
+    privacyUrl: string
+    defaultLocale: string
+    defaultTimezone: string
+    dateFormat: string
+    businessHours: string
+    dataResidencyRegion: string
+    trialDurationDays: number
+    trialAutoConvert: boolean
     allowTrialAutoEnroll: boolean
+    maintenanceNoticeLeadHours: number
     enforceStrictTenancy: boolean
+    enforceSsoForAdmins: boolean
   }
   security: {
     mfaEnforcedForAdmins: boolean

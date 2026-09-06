@@ -14,7 +14,7 @@ import {
 import { cn } from '../lib/utils'
 
 const SETTINGS_NAV = [
-  { to: '/admin/settings/general', label: 'General', icon: Sliders },
+  { to: '/admin/settings/general', label: 'General (SaaS)', icon: Sliders },
   { to: '/admin/settings/appearance', label: 'Appearance & Theme', icon: Palette },
   { to: '/admin/settings/security', label: 'Security', icon: Shield },
   { to: '/admin/settings/authentication', label: 'Authentication', icon: Key },
@@ -36,7 +36,7 @@ export function SettingsLayout() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6 items-start">
-        <nav className="flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-x-visible pb-2 md:pb-0 font-mono text-xs border-b md:border-b-0 md:border-r border-line pr-0 md:pr-4">
+        <nav className="flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-y-auto md:sticky md:top-4 md:self-start md:max-h-[calc(100vh-8rem)] scrollbar-thin pb-2 md:pb-0 pr-0 md:pr-4 font-mono text-xs border-b md:border-b-0 md:border-r border-line bg-transparent md:bg-transparent z-10">
           {SETTINGS_NAV.map((item) => (
             <NavLink
               key={item.to}

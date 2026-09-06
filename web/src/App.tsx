@@ -46,6 +46,7 @@ import { AccessReviewsPage } from './pages/admin/iam/AccessReviewsPage'
 
 import { AuditLogPage } from './pages/admin/audit/AuditLogPage'
 
+import { PlatformOverviewPage } from './pages/admin/platform/PlatformOverviewPage'
 import { SystemHealthPage } from './pages/admin/platform/SystemHealthPage'
 import { ServicesPage } from './pages/admin/platform/ServicesPage'
 import { AgentReleasesPage } from './pages/admin/platform/AgentReleasesPage'
@@ -134,7 +135,7 @@ export default function App() {
             <Route path="audit/data-access" element={<AuditLogPage forcedCategory="DATA_ACCESS" />} />
 
             {/* 9. Platform Operations */}
-            <Route path="platform" element={<Navigate to="/admin/platform/health" replace />} />
+            <Route path="platform" element={<PlatformOverviewPage />} />
             <Route path="platform/health" element={<SystemHealthPage />} />
             <Route path="platform/services" element={<ServicesPage />} />
             <Route path="platform/agents" element={<AgentReleasesPage />} />

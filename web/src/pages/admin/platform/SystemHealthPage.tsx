@@ -1,23 +1,29 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Activity, CheckCircle2, AlertTriangle, ShieldCheck, Database, Radio, Server } from 'lucide-react'
+import { Activity, CheckCircle2 } from 'lucide-react'
 import { useAdminData } from '../../../hooks/useAdminData'
 import { adminService } from '../../../services/adminService'
 import { StatusBadge } from '../../../components/admin/StatusBadge'
 
 export function SystemHealthPage() {
   const services = useAdminData(() => adminService.getServicesHealth())
+  const [env, setEnv] = useState<'ALL' | 'PRODUCTION' | 'STAGING'>('ALL')
 
   return (
     <div className="space-y-6 font-mono text-xs">
-      <div>
-        <h1 className="font-display text-xl font-bold tracking-tight text-ink flex items-center gap-2">
-          <Activity className="h-5 w-5 text-emerald-400" />
-          Guardian Platform Cluster & Service Health
-        </h1>
-        <p className="text-ink-soft mt-0.5">
-          Real-time mTLS gateway latency, database cluster replication lag, and distributed event bus throughput.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-xl font-bold tracking-tight text-ink flex items-center gap-2">
+            <Activity className="h-5 w-5 text-emerald-400" />
+            Guardian Platform Cluster & Service Health
+          </h1>
+          <p className="text-ink-soft mt-0.5">Real-time mTLS gateway latency, DB replication, event bus — mock UI.</p>
+        </div>
+        <div className="flex items-center gap-1 p-1 rounded-xl border border-line bg-surface-2">
+          {(['ALL', 'PRODUCTION', 'STAGING'] as const).map((e) => (
+            <button key={e} type="button" onClick={() => setEnv(e)} className={`px-2.5 py-1 rounded-lg text-[11px] ${env === e ? 'bg-signal text-white' : 'text-ink-soft hover:text-ink'}`}>{e}</button>
+          ))}
+        </div>
       </div>
 
       {/* Top Health Cards */}

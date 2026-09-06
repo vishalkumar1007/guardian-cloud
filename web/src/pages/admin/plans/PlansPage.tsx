@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { type ColumnDef } from '@tanstack/react-table'
 import {
   CreditCard,
@@ -19,7 +19,13 @@ import { StatusBadge } from '../../../components/admin/StatusBadge'
 
 export function PlansPage() {
   const navigate = useNavigate()
-  const plans = useAdminData(() => adminService.getPlans())
+  const [searchParams] = useSearchParams()
+  const targetFilter = searchParams.get('targetType')
+  const plans = useAdminData(() => {
+    const list = adminService.getPlans()
+    if (targetFilter) return list.filter((p) => p.targetType === targetFilter)
+    return list
+  })
 
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null)
@@ -151,9 +157,18 @@ export function PlansPage() {
           <h1 className="font-display text-xl font-bold tracking-tight text-ink flex items-center gap-2">
             <CreditCard className="h-5 w-5 text-signal" />
             Guardian Commercial Plans Catalog
+            {targetFilter && (
+              <span className="rounded-full border border-signal/20 bg-signal/10 px-2.5 py-0.5 text-xs font-mono font-semibold text-signal">
+                {targetFilter === 'PERSONAL' ? 'Personal' : 'Enterprise'}
+              </span>
+            )}
           </h1>
           <p className="text-xs text-ink-soft font-mono mt-0.5">
-            Manage public and custom pricing tiers, feature gates, seat allowances, and subscriber quotas.
+            {targetFilter === 'PERSONAL'
+              ? 'Personal B2C licenses — per-user device limits and consumer pricing.'
+              : targetFilter === 'ORGANIZATION'
+                ? 'Enterprise B2B tenants — seat pooling, fleet device quotas, and org billing.'
+                : 'Manage public and custom pricing tiers, feature gates, seat allowances, and subscriber quotas.'}
           </p>
         </div>
 

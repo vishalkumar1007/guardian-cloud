@@ -1,5 +1,5 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   BarChart,
   Bar,
@@ -33,6 +33,8 @@ const TOP_CONSUMING_ORGS = [
 ]
 
 export function UsagePage() {
+  const [searchParams] = useSearchParams()
+  const scope = searchParams.get('scope')
   const metrics = useAdminData(() => adminService.getMetrics())
 
   return (
@@ -40,10 +42,19 @@ export function UsagePage() {
       <div>
         <h1 className="font-display text-xl font-bold tracking-tight text-ink flex items-center gap-2">
           <Activity className="h-5 w-5 text-signal" />
-          Platform Usage & Telemetry Consumption
+          {scope === 'personal' ? 'Personal Usage & Telemetry' : scope === 'enterprise' ? 'Enterprise Usage & Telemetry' : 'Platform Usage & Telemetry Consumption'}
+          {scope && (
+            <span className="rounded-full border border-line bg-surface-2 px-2 py-0.5 text-xs font-mono font-semibold text-ink uppercase">
+              {scope}
+            </span>
+          )}
         </h1>
         <p className="text-xs text-ink-soft font-mono mt-0.5">
-          Real-time event throughput, evidence bucket storage, eBPF telemetry pipelines, and top tenant consumers.
+          {scope === 'personal'
+            ? 'Per-user event volume, personal device heartbeats, and consumer storage quotas.'
+            : scope === 'enterprise'
+              ? 'Tenant-aggregated fleet throughput, org evidence buckets, and enterprise quotas.'
+              : 'Real-time event throughput, evidence bucket storage, eBPF telemetry pipelines, and top tenant consumers.'}
         </p>
       </div>
 
