@@ -1,9 +1,11 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { Moon, Sun } from 'lucide-react'
 import { GuardianMark } from '../components/GuardianMark'
 import { Badge } from '../components/ui/badge'
 import { MOCK_DEVICES, MOCK_EVENTS } from '../data/mock'
 import { cn } from '../lib/utils'
 import { IconShieldCheck } from '../components/icons/SecurityIcons'
+import { useTheme } from '../theme/useTheme'
 
 const NAV = [
   { to: '/app', label: 'Overview', end: true },
@@ -18,6 +20,7 @@ const NAV = [
 
 export function WatchlineShell() {
   const location = useLocation()
+  const { theme, toggleColorMode } = useTheme()
   const ribbon = MOCK_EVENTS.slice(0, 3)
 
   return (
@@ -34,25 +37,36 @@ export function WatchlineShell() {
             </div>
             <IconShieldCheck className="ml-2 hidden h-8 w-8 sm:block" />
           </div>
-          <nav className="flex flex-wrap gap-1">
-            {NAV.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={'end' in item ? item.end : false}
-                className={({ isActive }) =>
-                  cn(
-                    'rounded-full px-3 py-1.5 text-sm font-medium no-underline transition',
-                    isActive
-                      ? 'bg-ink text-mist'
-                      : 'text-ink-soft hover:bg-surface-2 hover:text-ink',
-                  )
-                }
-              >
-                {item.label}
-              </NavLink>
-            ))}
-          </nav>
+          <div className="flex items-center gap-2">
+            <nav className="flex flex-wrap gap-1">
+              {NAV.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={'end' in item ? item.end : false}
+                  className={({ isActive }) =>
+                    cn(
+                      'rounded-full px-3 py-1.5 text-sm font-medium no-underline transition',
+                      isActive
+                        ? 'bg-ink text-mist'
+                        : 'text-ink-soft hover:bg-surface-2 hover:text-ink',
+                    )
+                  }
+                >
+                  {item.label}
+                </NavLink>
+              ))}
+            </nav>
+            <button
+              type="button"
+              onClick={toggleColorMode}
+              aria-label={`Switch to ${theme.colorScheme === 'dark' ? 'light' : 'dark'} mode`}
+              title={`Switch to ${theme.colorScheme === 'dark' ? 'light' : 'dark'} mode`}
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-line bg-surface text-ink hover:bg-surface-2 transition"
+            >
+              {theme.colorScheme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+          </div>
         </header>
 
         <div

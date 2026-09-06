@@ -10,9 +10,11 @@ import {
 } from 'react'
 import {
   WATCHLINE_DEFAULTS,
+  LIGHT_DEFAULTS,
+  DARK_DEFAULTS,
   THEME_POLL_MS,
   applyThemeTokens,
-  presetForScheme,
+  applySchemeToTheme,
   type ColorScheme,
   type PlatformTheme,
   type ThemeTokens,
@@ -25,6 +27,8 @@ export type ThemeContextValue = {
   loading: boolean
   error: string | null
   isDark: boolean
+  localScheme: ColorScheme | null
+  setLocalScheme: (scheme: ColorScheme | null) => void
   applyLocal: (tokens: ThemeTokens, version?: number) => void
   refresh: () => Promise<void>
   save: (tokens: ThemeTokens) => Promise<void>
@@ -54,37 +58,42 @@ function readLocalScheme(): ColorScheme | null {
 
 function withLocalScheme(remote: PlatformTheme): PlatformTheme {
   const local = readLocalScheme()
-  if (!local || local === remote.colorScheme) return remote
-  return { ...presetForScheme(local), version: remote.version, updatedAt: remote.updatedAt }
+  const target = local || remote.colorScheme || 'dark'
+  const applied = applySchemeToTheme(remote, target)
+  return {
+    ...applied,
+    version: remote.version,
+    updatedAt: remote.updatedAt,
+  }
 }
 
-function mapTheme(data: {
-  ink: string
-  ink_soft: string
-  mist: string
-  mist_deep: string
-  signal: string
-  signal_soft: string
-  alert: string
-  atmosphere_mode: string
-  color_scheme?: string
-  version: number
-  updated_at?: string
-}): PlatformTheme {
-  const colorScheme: ColorScheme = data.color_scheme === 'light' ? 'light' : 'dark'
+function mapTheme(data: any): PlatformTheme {
+  const remoteScheme: ColorScheme = data.color_scheme === 'light' ? 'light' : 'dark'
+  const local = readLocalScheme()
+  const colorScheme: ColorScheme = local ?? remoteScheme
+  const base = colorScheme === 'light' ? { ...LIGHT_DEFAULTS } : { ...DARK_DEFAULTS }
+  const accent = data.accent ?? data.signal ?? base.accent
+  const accent2 = data.accent2 ?? data.accent_2 ?? base.accent2
   return {
-    ink: data.ink,
-    inkSoft: data.ink_soft,
-    mist: data.mist,
-    mistDeep: data.mist_deep,
-    signal: data.signal,
-    signalSoft: data.signal_soft,
-    alert: data.alert,
-    atmosphereMode: data.atmosphere_mode,
+    ink: data.ink ?? base.ink,
+    inkSoft: data.ink_soft ?? base.inkSoft,
+    mist: data.mist ?? base.mist,
+    mistDeep: data.mist_deep ?? base.mistDeep,
+    signal: data.signal ?? accent,
+    signalSoft: data.signal_soft ?? base.signalSoft,
+    alert: data.alert ?? base.alert,
+    atmosphereMode: data.atmosphere_mode ?? base.atmosphereMode,
     colorScheme,
-    version: data.version,
+    version: data.version ?? 0,
     updatedAt: data.updated_at,
-  }
+    accent,
+    accent2,
+    radius: data.radius ?? base.radius,
+    radiusSm: data.radius_sm ?? base.radiusSm,
+    radiusLg: data.radius_lg ?? base.radiusLg,
+    fontDisplay: data.font_display ?? base.fontDisplay,
+    fontBody: data.font_body ?? base.fontBody,
+  } as PlatformTheme
 }
 
 async function fetchTheme(): Promise<PlatformTheme> {
@@ -94,6 +103,8 @@ async function fetchTheme(): Promise<PlatformTheme> {
 }
 
 async function putTheme(tokens: ThemeTokens): Promise<PlatformTheme> {
+  // Ensure the tokens being persisted match the scheme's background & text rules
+  const normalized = applySchemeToTheme(tokens, tokens.colorScheme)
   const res = await fetch(`${apiBase()}/api/v1/platform/theme`, {
     method: 'PUT',
     headers: {
@@ -101,15 +112,22 @@ async function putTheme(tokens: ThemeTokens): Promise<PlatformTheme> {
       Authorization: `Bearer ${platformToken()}`,
     },
     body: JSON.stringify({
-      ink: tokens.ink,
-      ink_soft: tokens.inkSoft,
-      mist: tokens.mist,
-      mist_deep: tokens.mistDeep,
-      signal: tokens.signal,
-      signal_soft: tokens.signalSoft,
-      alert: tokens.alert,
-      atmosphere_mode: tokens.atmosphereMode,
-      color_scheme: tokens.colorScheme,
+      ink: normalized.ink,
+      ink_soft: normalized.inkSoft,
+      mist: normalized.mist,
+      mist_deep: normalized.mistDeep,
+      signal: normalized.signal,
+      signal_soft: normalized.signalSoft,
+      alert: normalized.alert,
+      atmosphere_mode: normalized.atmosphereMode,
+      color_scheme: normalized.colorScheme,
+      accent: normalized.accent ?? normalized.signal,
+      accent2: normalized.accent2 ?? normalized.signal,
+      radius: normalized.radius,
+      radius_sm: normalized.radiusSm,
+      radius_lg: normalized.radiusLg,
+      font_display: normalized.fontDisplay,
+      font_body: normalized.fontBody,
     }),
   })
   if (!res.ok) {
@@ -120,13 +138,37 @@ async function putTheme(tokens: ThemeTokens): Promise<PlatformTheme> {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<PlatformTheme>({
-    ...WATCHLINE_DEFAULTS,
-    version: 0,
-  })
+  const initialTheme = useMemo(() => {
+    const local = readLocalScheme()
+    const target = local || WATCHLINE_DEFAULTS.colorScheme
+    return {
+      ...applySchemeToTheme(WATCHLINE_DEFAULTS, target),
+      version: 0,
+    }
+  }, [])
+
+  const [theme, setTheme] = useState<PlatformTheme>(initialTheme)
+  const [localScheme, setLocalSchemeState] = useState<ColorScheme | null>(readLocalScheme)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const versionRef = useRef(0)
+
+  const setLocalScheme = useCallback((scheme: ColorScheme | null) => {
+    try {
+      if (scheme) {
+        localStorage.setItem(SCHEME_KEY, scheme)
+      } else {
+        localStorage.removeItem(SCHEME_KEY)
+      }
+    } catch {}
+    setLocalSchemeState(scheme)
+    setTheme((prev) => {
+      const target = scheme || prev.colorScheme || 'dark'
+      const next = applySchemeToTheme(prev, target)
+      applyThemeTokens(next)
+      return { ...next, version: prev.version, updatedAt: prev.updatedAt }
+    })
+  }, [])
 
   const applyLocal = useCallback((tokens: ThemeTokens, version?: number) => {
     applyThemeTokens(tokens)
@@ -140,15 +182,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     try {
       const remote = await fetchTheme()
-      const next = withLocalScheme(remote)
-      applyThemeTokens(next)
-      versionRef.current = remote.version
-      setTheme(next)
+      const effective = withLocalScheme(remote)
+      applyThemeTokens(effective)
+      versionRef.current = effective.version
+      setTheme(effective)
       setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'theme unavailable')
-      const local = readLocalScheme()
-      const fallback = local ? presetForScheme(local) : WATCHLINE_DEFAULTS
+      const local = readLocalScheme() || 'dark'
+      const fallback = applySchemeToTheme(WATCHLINE_DEFAULTS, local)
       applyThemeTokens(fallback)
       setTheme({ ...fallback, version: 0 })
     } finally {
@@ -158,14 +200,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const save = useCallback(async (tokens: ThemeTokens) => {
     const next = await putTheme(tokens)
-    try {
-      localStorage.setItem(SCHEME_KEY, tokens.colorScheme)
-    } catch {
-      /* ignore */
-    }
-    applyThemeTokens(next)
-    versionRef.current = next.version
-    setTheme(next)
+    const effective = withLocalScheme(next)
+    applyThemeTokens(effective)
+    versionRef.current = effective.version
+    setTheme(effective)
     setError(null)
   }, [])
 
@@ -177,22 +215,44 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     (scheme: ColorScheme) => {
       try {
         localStorage.setItem(SCHEME_KEY, scheme)
-      } catch {
-        /* ignore */
-      }
-      applyLocal(presetForScheme(scheme), theme.version)
+      } catch {}
+      setLocalSchemeState(scheme)
+      const next = applySchemeToTheme(theme, scheme)
+      applyLocal(next, theme.version)
     },
-    [applyLocal, theme.version],
+    [applyLocal, theme],
   )
 
   const toggleColorMode = useCallback(() => {
     const next: ColorScheme = theme.colorScheme === 'dark' ? 'light' : 'dark'
-    applySchemePreset(next)
-  }, [theme.colorScheme, applySchemePreset])
+    try {
+      localStorage.setItem(SCHEME_KEY, next)
+    } catch {}
+    setLocalSchemeState(next)
+    const nextTheme = applySchemeToTheme(theme, next)
+    applyLocal(nextTheme, theme.version)
+  }, [theme, applyLocal])
+
+  // Sync when localStorage is modified externally or in another tab
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === SCHEME_KEY) {
+        const val = e.newValue === 'light' || e.newValue === 'dark' ? (e.newValue as ColorScheme) : null
+        setLocalSchemeState(val)
+        setTheme((prev) => {
+          const target = val || prev.colorScheme || 'dark'
+          const next = applySchemeToTheme(prev, target)
+          applyThemeTokens(next)
+          return { ...next, version: prev.version, updatedAt: prev.updatedAt }
+        })
+      }
+    }
+    window.addEventListener('storage', handleStorage)
+    return () => window.removeEventListener('storage', handleStorage)
+  }, [])
 
   useEffect(() => {
-    const local = readLocalScheme()
-    applyThemeTokens(local ? presetForScheme(local) : WATCHLINE_DEFAULTS)
+    applyThemeTokens(theme)
     void refresh()
     const id = window.setInterval(() => {
       void (async () => {
@@ -218,6 +278,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       loading,
       error,
       isDark: theme.colorScheme === 'dark',
+      localScheme,
+      setLocalScheme,
       applyLocal,
       refresh,
       save,
@@ -229,6 +291,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       theme,
       loading,
       error,
+      localScheme,
+      setLocalScheme,
       applyLocal,
       refresh,
       save,

@@ -150,7 +150,7 @@ export function ModesSection() {
         <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-signal/7 blur-2xl" />
         <div className="relative p-7 md:p-8">
           <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-signal text-white">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-signal text-mist-deep">
               <User className="h-4 w-4" />
             </span>
             <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-signal">Personal Tenant</p>
@@ -160,7 +160,7 @@ export function ModesSection() {
           <ul className="mt-6 space-y-2.5">
             {['Personal Owner', '3 devices on Basic', 'Events & recovery', 'Face & screenshot'].map((t) => (
               <li key={t} className="flex items-center gap-2.5 rounded-xl border border-line bg-surface-2/60 px-3 py-2.5 text-[13px] leading-relaxed text-ink-soft">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-signal text-white">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-signal text-mist-deep">
                   <Shield className="h-3 w-3" />
                 </span>
                 {t}

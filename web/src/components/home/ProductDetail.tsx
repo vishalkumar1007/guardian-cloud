@@ -58,13 +58,13 @@ export function ProductDetail() {
               <div className="grid grid-cols-3 gap-3">
                 {DEVICES.map((d) => (
                   <div key={d.label} className={`flex flex-col items-center rounded-xl border bg-surface px-2.5 py-4 text-center ${d.online ? 'border-signal/15' : 'border-line opacity-90'}`}>
-                    <span className={`flex h-9 w-9 items-center justify-center rounded-lg text-xs font-bold ${d.online ? 'bg-signal text-white' : 'bg-surface-2 text-ink-soft'}`}>{d.letter}</span>
+                    <span className={`flex h-9 w-9 items-center justify-center rounded-lg text-xs font-bold ${d.online ? 'bg-signal text-mist-deep' : 'bg-surface-2 text-ink-soft'}`}>{d.letter}</span>
                     <p className="mt-2.5 font-display text-xs font-semibold tracking-tight text-ink">{d.label}</p>
                     <span className="mt-1 inline-flex items-center gap-1 rounded-full border border-line bg-mist px-1.5 py-0.5 font-mono text-[10px] text-ink-soft">
                       {d.label === 'Studio' ? <Apple className="h-3 w-3" /> : d.label === 'Travel' ? <Laptop className="h-3 w-3" /> : <Monitor className="h-3 w-3" />}
                       {d.sub}
                     </span>
-                    <span className={`mt-2 rounded-full px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider ${d.online ? 'bg-signal text-white' : 'bg-mist text-ink-soft'}`}>{d.online ? 'Online' : 'Offline'}</span>
+                    <span className={`mt-2 rounded-full px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider ${d.online ? 'bg-signal text-mist-deep' : 'bg-mist text-ink-soft'}`}>{d.online ? 'Online' : 'Offline'}</span>
                   </div>
                 ))}
               </div>

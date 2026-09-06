@@ -102,7 +102,7 @@ function Card({ p }: { p: (typeof TIERS)[number] }) {
       <ul className="relative mt-4 flex flex-1 flex-col space-y-2.5 text-left">
         {p.features.map((f) => (
           <li key={f} className="flex items-start justify-start gap-2.5 text-left text-xs leading-relaxed">
-            <span className={`mt-[3px] flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full ${f.startsWith('Everything') ? 'bg-signal text-white' : 'bg-surface-2 border border-line text-ink-soft'}`}>
+            <span className={`mt-[3px] flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full ${f.startsWith('Everything') ? 'bg-signal text-mist-deep' : 'bg-surface-2 border border-line text-ink-soft'}`}>
               <Check className="h-3 w-3" />
             </span>
             <span className={`flex-1 text-left ${f.startsWith('Everything') ? 'font-semibold text-ink' : 'text-ink-soft'}`}>{f}</span>
@@ -126,7 +126,7 @@ export function PlanMatrix() {
       <div className="grid items-start gap-6 lg:grid-cols-2">
         <div className="flex flex-col gap-4">
           <div className="flex h-7 items-center gap-2.5 px-1">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-signal text-white">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-signal text-mist-deep">
               <User className="h-3.5 w-3.5" />
             </span>
             <p className="font-mono text-xs font-semibold uppercase tracking-wide text-ink leading-none">Personal</p>

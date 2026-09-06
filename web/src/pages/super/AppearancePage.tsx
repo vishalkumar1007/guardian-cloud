@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTheme } from '../../theme/useTheme'
-import { LIGHT_DEFAULTS, DARK_DEFAULTS, type ColorScheme, type ThemeTokens } from '../../theme/tokens'
+import { LIGHT_DEFAULTS, DARK_DEFAULTS, applySchemeToTheme, type ColorScheme, type ThemeTokens } from '../../theme/tokens'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
@@ -22,21 +22,11 @@ const FIELDS: { key: keyof ThemeTokens; label: string; color?: boolean }[] = [
 ]
 
 function pickTokens(theme: ThemeTokens): ThemeTokens {
-  return {
-    ink: theme.ink,
-    inkSoft: theme.inkSoft,
-    mist: theme.mist,
-    mistDeep: theme.mistDeep,
-    signal: theme.signal,
-    signalSoft: theme.signalSoft,
-    alert: theme.alert,
-    atmosphereMode: theme.atmosphereMode,
-    colorScheme: theme.colorScheme,
-  }
+  return { ...theme }
 }
 
 export function AppearancePage() {
-  const { theme, applyLocal, save, resetDefaults, applySchemePreset } = useTheme()
+  const { theme, applyLocal, save, resetDefaults, applySchemePreset, localScheme, setLocalScheme } = useTheme()
   const [dirty, setDirty] = useState<ThemeTokens | null>(null)
   const draft = dirty ?? pickTokens(theme)
   const [status, setStatus] = useState<string | null>(null)
@@ -49,8 +39,8 @@ export function AppearancePage() {
   }
 
   function onScheme(scheme: ColorScheme) {
-    const preset = scheme === 'light' ? LIGHT_DEFAULTS : DARK_DEFAULTS
-    setDirty(preset)
+    const next = applySchemeToTheme(draft, scheme)
+    setDirty(next)
     applySchemePreset(scheme)
   }
 
@@ -96,12 +86,43 @@ export function AppearancePage() {
         </Badge>
       </div>
 
-      <Tabs value={draft.colorScheme} onValueChange={(v) => onScheme(v as ColorScheme)}>
-        <TabsList>
-          <TabsTrigger value="dark">Dark</TabsTrigger>
-          <TabsTrigger value="light">Light</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Tabs value={draft.colorScheme} onValueChange={(v) => onScheme(v as ColorScheme)}>
+          <TabsList>
+            <TabsTrigger value="dark">Dark (Platform)</TabsTrigger>
+            <TabsTrigger value="light">Light (Platform)</TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        <div className="flex items-center gap-2 rounded-xl border border-line bg-surface-2/50 px-3 py-1.5 text-xs">
+          <span className="font-mono text-ink-soft">
+            LocalStorage: <strong className="text-signal">{localScheme ? localScheme.toUpperCase() : 'None'}</strong>
+          </span>
+          <button
+            type="button"
+            onClick={() => setLocalScheme('light')}
+            className={`rounded-lg border border-line px-2 py-0.5 font-mono text-[11px] ${localScheme === 'light' ? 'bg-signal text-mist-deep' : 'bg-surface text-ink'}`}
+          >
+            Light
+          </button>
+          <button
+            type="button"
+            onClick={() => setLocalScheme('dark')}
+            className={`rounded-lg border border-line px-2 py-0.5 font-mono text-[11px] ${localScheme === 'dark' ? 'bg-signal text-mist-deep' : 'bg-surface text-ink'}`}
+          >
+            Dark
+          </button>
+          {localScheme && (
+            <button
+              type="button"
+              onClick={() => setLocalScheme(null)}
+              className="rounded-lg border border-line bg-surface px-2 py-0.5 font-mono text-[11px] text-ink-soft hover:text-ink"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      </div>
 
       <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
         <div className="space-y-4">

@@ -150,7 +150,7 @@ export function MacBookProductStage({ className }: { className?: string; hero?: 
                               <div className="absolute -inset-3 rounded-[28px] bg-signal/10 blur-xl" />
                               <div className="relative flex h-[68px] w-[68px] items-center justify-center rounded-[20px] bg-surface border border-line shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
                                 <span className="font-display text-lg font-bold tracking-tight text-ink">AM</span>
-                                <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-alert text-white shadow-sm ring-2 ring-surface"><span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" /></span>
+                                <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-alert text-mist-deep shadow-sm ring-2 ring-surface"><span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" /></span>
                               </div>
                             </div>
                             <p className="mt-3 font-display text-[15px] font-semibold tracking-tight text-ink">Alex Morgan</p>
@@ -169,7 +169,7 @@ export function MacBookProductStage({ className }: { className?: string; hero?: 
                           </div>
                           <div className="p-3">
                             <div className="flex items-center gap-3 rounded-2xl border border-alert/20 bg-surface shadow-[0_8px_24px_rgba(0,0,0,0.08)] p-3">
-                              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-alert text-white shadow-sm"><Camera className="h-4 w-4" /></span>
+                              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-alert text-mist-deep shadow-sm"><Camera className="h-4 w-4" /></span>
                               <div className="min-w-0 flex-1">
                                 <p className="font-display text-xs font-semibold leading-none text-ink flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-alert animate-pulse" /> Sentinel Tripwire</p>
                                 <p className="mt-1 font-mono text-[11px] leading-tight text-ink-soft line-clamp-1">Silently captured — Ed25519 sealed → iPhone</p>
@@ -186,7 +186,7 @@ export function MacBookProductStage({ className }: { className?: string; hero?: 
                         <div className="absolute inset-0 bg-gradient-to-br from-mist via-surface to-mist-deep opacity-60" />
                         <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: `linear-gradient(var(--g-line) 1px, transparent 1px), linear-gradient(90deg, var(--g-line) 1px, transparent 1px)`, backgroundSize: '22px 22px' }} />
                         <div className="relative flex h-full flex-col items-center justify-center p-6 text-center">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-alert text-white shadow-[0_8px_24px_rgba(239,68,68,0.25)]"><Lock className="h-6 w-6" /></div>
+                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-alert text-mist-deep shadow-[0_8px_24px_rgba(239,68,68,0.25)]"><Lock className="h-6 w-6" /></div>
                           <h3 className="mt-3 font-display text-[15px] font-bold uppercase tracking-[0.04em] text-ink">This Mac is Locked</h3>
                           <p className="mt-1.5 max-w-[32ch] text-xs leading-relaxed text-ink-soft">Hardware input disabled. Storage keys sealed with FileVault & Secure Enclave. Location beacon active.</p>
                           <div className="mt-5 w-full max-w-[300px] rounded-2xl border border-line bg-surface-2 p-3 text-left shadow-sm">

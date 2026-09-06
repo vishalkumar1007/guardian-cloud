@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
-import { Moon, Sun } from 'lucide-react'
+import { Moon, Sun, ShieldCheck } from 'lucide-react'
 import { GuardianMark } from '../components/GuardianMark'
 import { Button } from '../components/ui/button'
 import { cn } from '../lib/utils'
@@ -43,7 +43,7 @@ export function PublicLayout() {
       {!isAuth && <header className={cn('g-public-nav', scrolled && 'scrolled')}>
         <div className="g-public-nav-inner">
           <Link to="/" className="flex shrink-0 items-center gap-2.5 text-ink no-underline">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-signal text-white shadow-sm">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-signal text-mist-deep shadow-sm">
               <GuardianMark className="h-5 w-5" />
             </span>
             <span className="font-display text-[15px] font-bold tracking-tight md:text-[17px]">Guardian</span>
@@ -77,6 +77,9 @@ export function PublicLayout() {
             >
               {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
+            <Button asChild variant="ghost" size="sm" className="rounded-full hidden lg:inline-flex gap-1.5">
+              <Link to="/super/login"><ShieldCheck className="h-3.5 w-3.5" /> Super Admin</Link>
+            </Button>
             <Button asChild variant="ghost" size="sm" className="rounded-full hidden sm:inline-flex">
               <Link to="/login">Log in</Link>
             </Button>
@@ -96,7 +99,7 @@ export function PublicLayout() {
           <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
             <div>
               <div className="flex items-center gap-2.5">
-                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-signal text-white shadow-sm">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-signal text-mist-deep shadow-sm">
                   <GuardianMark className="h-5 w-5" />
                 </span>
                 <span className="font-display text-lg font-bold tracking-tight">Guardian</span>
@@ -121,7 +124,7 @@ export function PublicLayout() {
               <ul className="mt-4 space-y-2.5 text-sm">
                 <li><Link to="/login" className="text-ink-soft no-underline hover:text-ink transition-colors">Sign in</Link></li>
                 <li><Link to="/signup" className="text-ink-soft no-underline hover:text-ink transition-colors">Create account</Link></li>
-                <li><Link to="/signup" className="text-ink-soft no-underline hover:text-ink transition-colors">Start watchline</Link></li>
+                <li><Link to="/super/login" className="inline-flex items-center gap-1.5 text-ink-soft no-underline hover:text-ink transition-colors"><ShieldCheck className="h-3 w-3 text-signal" /> Super Admin Console</Link></li>
                 <li><a href="/#how" className="text-ink-soft no-underline hover:text-ink transition-colors">How it works</a></li>
               </ul>
             </div>

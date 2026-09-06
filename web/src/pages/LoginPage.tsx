@@ -49,7 +49,7 @@ export function LoginPage() {
           {/* Brand Header */}
           <div className="relative z-10">
             <Link to="/" className="group inline-flex items-center gap-2.5 no-underline">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-signal text-white shadow-sm transition-transform group-hover:scale-105">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-signal text-mist-deep shadow-sm transition-transform group-hover:scale-105">
                 <GuardianMark className="h-5 w-5" />
               </span>
               <span className="font-display text-base font-bold tracking-tight text-ink">Guardian</span>
@@ -108,7 +108,7 @@ export function LoginPage() {
           {/* Top Home Link */}
           <div className="flex items-center justify-between">
             <Link to="/" className="flex items-center gap-2 text-ink lg:hidden no-underline">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-signal text-white">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-signal text-mist-deep">
                 <GuardianMark className="h-4 w-4" />
               </span>
               <span className="font-display text-sm font-bold">Guardian</span>

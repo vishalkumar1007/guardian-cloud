@@ -5,6 +5,20 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Guardian</title>
+    <script>
+      (() => {
+        try {
+          const v = localStorage.getItem('guardian-color-scheme')
+          const scheme = v === 'light' || v === 'dark' ? v : null
+          if (scheme) {
+            document.documentElement.setAttribute('data-theme', scheme)
+            document.documentElement.dataset.theme = scheme
+            document.documentElement.classList.toggle('dark', scheme === 'dark')
+            document.documentElement.style.colorScheme = scheme
+          }
+        } catch {}
+      })()
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

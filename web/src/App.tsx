@@ -6,10 +6,19 @@ import { LandingPage } from './pages/LandingPage'
 import { LoginPage } from './pages/LoginPage'
 import { SignupPage } from './pages/SignupPage'
 import { SuperOverviewPage } from './pages/super/SuperOverviewPage'
-import { SuperSetupPage } from './pages/super/SuperSetupPage'
+import { SuperLoginPage } from './pages/super/SuperLoginPage'
 import { AppearancePage } from './pages/super/AppearancePage'
 import { AiPage } from './pages/super/AiPage'
-import { SuperPlaceholderPage } from './pages/super/SuperPlaceholderPage'
+import { OrganizationsPage } from './pages/super/OrganizationsPage'
+import { UsersPage } from './pages/super/UsersPage'
+import { DevicesPageSuper } from './pages/super/DevicesPageSuper'
+import { AgentsPage } from './pages/super/AgentsPage'
+import { PlansPage } from './pages/super/PlansPage'
+import { SubscriptionsPage } from './pages/super/SubscriptionsPage'
+import { SystemHealthPage } from './pages/super/SystemHealthPage'
+import { AuditPage } from './pages/super/AuditPage'
+import { SupportPage } from './pages/super/SupportPage'
+import { SettingsPageSuper } from './pages/super/SettingsPageSuper'
 import { TooltipProvider } from './components/ui/tooltip'
 
 function ScrollToTop() {
@@ -38,22 +47,24 @@ export default function App() {
             <Route path="signup" element={<SignupPage />} />
           </Route>
 
-          {/* Super Admin Control-Plane */}
+          <Route path="super/login" element={<SuperLoginPage />} />
+
+          {/* Super Admin Control-Plane (protected) */}
           <Route path="super" element={<SuperShell />}>
             <Route index element={<SuperOverviewPage />} />
-            <Route path="setup" element={<SuperSetupPage />} />
             <Route path="overview" element={<Navigate to="/super" replace />} />
             <Route path="ai" element={<AiPage />} />
-            <Route path="appearance" element={<AppearancePage />} />
-            <Route path="organizations" element={<SuperPlaceholderPage title="Organizations" subtitle="Manage tenant organizations, zero-trust policies, and isolation." tag="Tenants" metricTitle="Active Orgs" metricValue="128 Active" />} />
-            <Route path="users" element={<SuperPlaceholderPage title="Platform Users" subtitle="Control-plane platform administrators and enterprise role memberships." tag="Identity" metricTitle="Super Admins" metricValue="2 Seeded" />} />
-            <Route path="devices" element={<SuperPlaceholderPage title="Fleet Devices" subtitle="Hardware endpoints enrolled across macOS, Windows, and Linux." tag="Hardware" metricTitle="Enclave Guarded" metricValue="4,210 Nodes" />} />
-            <Route path="agents" element={<SuperPlaceholderPage title="Rust Core Agents" subtitle="Agent binary builds, hash verification, and OTA auto-upgrade channels." tag="Daemons" metricTitle="Latest Version" metricValue="v1.4.2" />} />
-            <Route path="plans" element={<SuperPlaceholderPage title="Subscription Plans" subtitle="Personal Basic (900c) and Enterprise fleet licensing tiers." tag="Pricing" metricTitle="Tiers" metricValue="3 Plans" />} />
-            <Route path="subscriptions" element={<SuperPlaceholderPage title="Active Subscriptions" subtitle="Recurring billing status, seat quotas, and usage telemetry." tag="Billing" metricTitle="MRR Status" metricValue="Healthy" />} />
-            <Route path="system-health" element={<SuperPlaceholderPage title="System Health & Migrations" subtitle="Database connection pool, Redis cache, and Goose migration version 10." tag="Telemetry" metricTitle="DB Status" metricValue="Goose v10 OK" />} />
-            <Route path="audit" element={<SuperPlaceholderPage title="Platform Audit Trail" subtitle="Cryptographically sealed ledger of all SUPER_ADMIN and system actions." tag="Audit Log" metricTitle="Sealed Events" metricValue="100% Immutable" />} />
-            <Route path="support" element={<SuperPlaceholderPage title="Support & Security Tickets" subtitle="Customer incident escalations and emergency hardware lock tickets." tag="Support" metricTitle="Open Queue" metricValue="7 Tickets" />} />
+            <Route path="organizations" element={<OrganizationsPage />} />
+            <Route path="users" element={<UsersPage />} />
+            <Route path="devices" element={<DevicesPageSuper />} />
+            <Route path="agents" element={<AgentsPage />} />
+            <Route path="plans" element={<PlansPage />} />
+            <Route path="subscriptions" element={<SubscriptionsPage />} />
+            <Route path="system-health" element={<SystemHealthPage />} />
+            <Route path="audit" element={<AuditPage />} />
+            <Route path="support" element={<SupportPage />} />
+            <Route path="appearance" element={<Navigate to="/super/settings?tab=appearance" replace />} />
+            <Route path="settings" element={<SettingsPageSuper />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -49,7 +49,7 @@ function RealisticMap() {
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
         <span className="absolute h-14 w-14 rounded-full bg-signal/10 animate-ping" />
         <span className="absolute h-9 w-9 rounded-full bg-signal/15" />
-        <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-alert text-white shadow-lg shadow-alert/30 ring-4 ring-white">
+        <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-alert text-mist-deep shadow-lg shadow-alert/30 ring-4 ring-white">
           <MapPin className="h-4 w-4" />
         </span>
         <span className="relative mt-1.5 rounded-full border border-line bg-surface px-2 py-0.5 font-mono text-[10px] font-semibold text-ink shadow-sm whitespace-nowrap">MacBook Pro 16″</span>
@@ -139,7 +139,7 @@ export function PhoneMockup({ mode, onActionTrigger, lastPingFromMac }: PhoneMoc
                     </div>
                     <div className="rounded-2xl border border-line bg-surface-2 p-3 shadow-sm space-y-3">
                       <div className="flex items-center justify-between gap-2 min-w-0">
-                        <span className="flex min-w-0 items-center gap-1.5 truncate font-mono text-[11px] font-semibold text-ink"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-alert text-white"><GuardianMark className="h-3 w-3" /></span> <span className="truncate">Guardian Sentinel</span></span>
+                        <span className="flex min-w-0 items-center gap-1.5 truncate font-mono text-[11px] font-semibold text-ink"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-alert text-mist-deep"><GuardianMark className="h-3 w-3" /></span> <span className="truncate">Guardian Sentinel</span></span>
                         <span className="shrink-0 font-mono text-[11px] text-ink-soft">now</span>
                       </div>
                       <div className="space-y-1 min-w-0">
@@ -147,7 +147,7 @@ export function PhoneMockup({ mode, onActionTrigger, lastPingFromMac }: PhoneMoc
                         <p className="text-xs leading-relaxed text-ink-soft line-clamp-2">3 failed PINs. Silent snapshot sealed with owner Ed25519 key.</p>
                       </div>
                       <div className="flex items-center gap-3 rounded-xl border border-line bg-surface p-2.5">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ink text-white"><Camera className="h-5 w-5" /></span>
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ink text-mist"><Camera className="h-5 w-5" /></span>
                         <span className="min-w-0 flex-1">
                           <span className="block truncate font-mono text-xs font-semibold text-ink">Unknown face captured</span>
                           <span className="block truncate font-mono text-[11px] text-ink-soft">Evidence encrypted · Owner only</span>
@@ -155,7 +155,7 @@ export function PhoneMockup({ mode, onActionTrigger, lastPingFromMac }: PhoneMoc
                         <Badge variant="alert" className="shrink-0 text-[10px]">Sealed</Badge>
                       </div>
                       {!deviceLocked ? (
-                        <Button type="button" size="sm" onClick={handleLock} className="w-full rounded-full bg-alert text-white hover:bg-alert/90 gap-1.5 font-medium">
+                        <Button type="button" size="sm" onClick={handleLock} className="w-full rounded-full bg-alert text-mist-deep hover:bg-alert/90 gap-1.5 font-medium">
                           <Lock className="h-3.5 w-3.5" /> Lock hardware now
                         </Button>
                       ) : (
@@ -210,7 +210,7 @@ export function PhoneMockup({ mode, onActionTrigger, lastPingFromMac }: PhoneMoc
                     <div className="flex items-center justify-between gap-2 min-w-0"><span className="flex items-center gap-1.5 font-mono text-[11px] font-semibold text-ink truncate"><Radio className="h-3 w-3 shrink-0 text-signal" /> Hardware enrollment</span><span className="shrink-0 font-mono text-[10px] text-ink-soft">1m ago</span></div>
                     <div className="min-w-0"><p className="truncate font-mono text-xs font-semibold text-ink">MacBook M3 Max (#ENG-04)</p><p className="truncate font-mono text-[11px] text-ink-soft">Ed25519 enclave key verified</p></div>
                     {!enterpriseApproved ? (
-                      <Button type="button" size="sm" onClick={handleApprove} className="w-full rounded-full bg-ink text-white hover:bg-ink/90 gap-1.5 font-medium"><Check className="h-3.5 w-3.5" /> Approve enclave key</Button>
+                      <Button type="button" size="sm" onClick={handleApprove} className="w-full rounded-full bg-ink text-mist hover:bg-ink/90 gap-1.5 font-medium"><Check className="h-3.5 w-3.5" /> Approve enclave key</Button>
                     ) : (
                       <span className="flex w-full items-center justify-center gap-1.5 rounded-full bg-signal-soft border border-signal/20 px-3 py-2 font-mono text-xs font-semibold text-signal"><Check className="h-3.5 w-3.5" /> Approved & bound</span>
                     )}
@@ -233,7 +233,7 @@ export function PhoneMockup({ mode, onActionTrigger, lastPingFromMac }: PhoneMoc
                     <span className="min-w-0 flex-1"><span className="flex items-center gap-1.5 truncate font-mono text-xs font-semibold text-ink"><Camera className="h-3.5 w-3.5 shrink-0 text-signal" /> Silent camera snapshot</span><span className="block truncate font-mono text-[11px] text-ink-soft">Enclave-sealed proof</span></span>
                     <span className={cn('relative h-5 w-9 shrink-0 rounded-full p-0.5 transition-colors', cameraEvidenceEnabled ? 'bg-signal' : 'bg-line')}><span className={cn('block h-4 w-4 rounded-full bg-white shadow-sm transition-transform', cameraEvidenceEnabled ? 'translate-x-4' : 'translate-x-0')} /></span>
                   </button>
-                  <Button type="button" variant="outline" size="sm" onClick={handleSendPing} className={cn('w-full rounded-full gap-1.5 font-mono text-xs border-line', pingSent && 'bg-signal text-white border-signal hover:bg-signal')}>
+                  <Button type="button" variant="outline" size="sm" onClick={handleSendPing} className={cn('w-full rounded-full gap-1.5 font-mono text-xs border-line', pingSent && 'bg-signal text-mist-deep border-signal hover:bg-signal')}>
                     <Send className="h-3.5 w-3.5" /> {pingSent ? 'Ping sent to MacBook' : 'Ping Mac via TLS 1.3'}
                   </Button>
                   <span className="mt-auto flex items-center justify-center gap-1.5 rounded-full border border-line bg-surface-2 px-3 py-1.5 text-center font-mono text-[11px] text-ink-soft shrink-0">

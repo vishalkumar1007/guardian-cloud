@@ -24,13 +24,27 @@ func NewRouter(deps RouterDeps) http.Handler {
 	r.Get("/healthz", healthz)
 
 	theme := &ThemeHandler{DB: deps.DB}
-	bootstrap := &BootstrapHandler{DB: deps.DB}
+	platform := &PlatformHandler{DB: deps.DB}
+	adminSettings := &AdminSettingsHandler{DB: deps.DB}
 
 	r.Route("/api/v1/platform", func(pr chi.Router) {
 		pr.Get("/theme", theme.Get)
 		pr.Put("/theme", theme.Put)
-		pr.Get("/bootstrap", bootstrap.GetStatus)
-		pr.Post("/setup", bootstrap.Setup)
+		pr.Get("/organizations", platform.Organizations)
+		pr.Get("/users", platform.Users)
+		pr.Get("/devices", platform.Devices)
+		pr.Get("/agents", platform.Agents)
+		pr.Get("/plans", platform.Plans)
+		pr.Get("/subscriptions", platform.Subscriptions)
+		pr.Get("/system-health", platform.SystemHealth)
+		pr.Get("/audit", platform.Audit)
+		pr.Get("/support", platform.Support)
+	})
+
+	r.Route("/api/v1/admin/settings", func(ar chi.Router) {
+		ar.Get("/", adminSettings.List)
+		ar.Get("/{category}", adminSettings.GetCategory)
+		ar.Put("/{category}", adminSettings.PutCategory)
 	})
 
 	return r
