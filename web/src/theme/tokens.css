@@ -79,6 +79,13 @@
   color: var(--g-ink);
 }
 
+[data-theme="light"] .g-atmosphere {
+  background:
+    radial-gradient(700px 320px at 20% -10%, color-mix(in srgb, var(--g-accent) 9%, transparent), transparent 60%),
+    radial-gradient(800px 380px at 80% -12%, color-mix(in srgb, var(--g-accent-2) 7%, transparent), transparent 62%),
+    linear-gradient(180deg, color-mix(in srgb, var(--g-mist) 94%, white), var(--g-mist) 70%, var(--g-mist-deep) 100%);
+}
+
 .g-atmosphere::before {
   content: "";
   pointer-events: none;

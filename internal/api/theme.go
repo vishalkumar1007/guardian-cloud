@@ -9,8 +9,8 @@ import (
 	"strings"
 )
 
-var hexColor = regexp.MustCompile(`^#[0-9a-fA-F]{6}$`)
-var rgbaColor = regexp.MustCompile(`^rgba?\([0-9\s,./%]+\)$`)
+var hexColor = regexp.MustCompile(`^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$`)
+var rgbaColor = regexp.MustCompile(`^(rgba?|hsla?|color-mix)\(.+\)$`)
 
 type ThemeHandler struct {
 	DB *sql.DB

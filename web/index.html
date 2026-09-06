@@ -1,5 +1,5 @@
 <!doctype html>
-    <html lang="en" data-theme="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -8,15 +8,31 @@
     <script>
       (() => {
         try {
-          const v = localStorage.getItem('guardian-color-scheme')
-          const scheme = v === 'light' || v === 'dark' ? v : null
+          var themeRaw = localStorage.getItem('guardian-theme') || localStorage.getItem('guardian-saved-theme');
+          var theme = null;
+          if (themeRaw) { try { theme = JSON.parse(themeRaw); } catch(e) {} }
+          var scheme = localStorage.getItem('guardian-color-scheme');
+          if (scheme !== 'light' && scheme !== 'dark') scheme = null;
+          if (!scheme && theme && (theme.colorScheme === 'light' || theme.colorScheme === 'dark')) scheme = theme.colorScheme;
           if (scheme) {
-            document.documentElement.setAttribute('data-theme', scheme)
-            document.documentElement.dataset.theme = scheme
-            document.documentElement.classList.toggle('dark', scheme === 'dark')
-            document.documentElement.style.colorScheme = scheme
+            document.documentElement.setAttribute('data-theme', scheme);
+            document.documentElement.dataset.theme = scheme;
+            document.documentElement.classList.toggle('dark', scheme === 'dark');
+            document.documentElement.style.colorScheme = scheme;
+          } else {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.documentElement.dataset.theme = 'dark';
+            document.documentElement.classList.add('dark');
+            document.documentElement.style.colorScheme = 'dark';
           }
-        } catch {}
+          if (theme) {
+            var r = document.documentElement;
+            if (theme.accent) { r.style.setProperty('--g-accent', theme.accent); r.style.setProperty('--accent', theme.accent); }
+            if (theme.accent2) r.style.setProperty('--g-accent-2', theme.accent2);
+            if (theme.fontDisplay) r.style.setProperty('--g-font-display', theme.fontDisplay);
+            if (theme.fontBody) r.style.setProperty('--g-font-body', theme.fontBody);
+          }
+        } catch(e) {}
       })()
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />

@@ -21,6 +21,8 @@ import {
 } from './tokens'
 
 const SCHEME_KEY = 'guardian-color-scheme'
+const THEME_KEY = 'guardian-theme'
+const LEGACY_SAVED_KEY = 'guardian-saved-theme'
 
 export type ThemeContextValue = {
   theme: PlatformTheme
@@ -56,10 +58,29 @@ function readLocalScheme(): ColorScheme | null {
   }
 }
 
+function readSavedTheme(): PlatformTheme | null {
+  try {
+    const raw = localStorage.getItem(THEME_KEY) || localStorage.getItem(LEGACY_SAVED_KEY)
+    if (!raw) return null
+    const t = JSON.parse(raw)
+    if (t && (t.colorScheme === 'light' || t.colorScheme === 'dark') && t.accent) {
+      return t as PlatformTheme
+    }
+  } catch {}
+  return null
+}
+
+function persistTheme(tokens: ThemeTokens) {
+  try {
+    localStorage.setItem(THEME_KEY, JSON.stringify(tokens))
+    localStorage.setItem(SCHEME_KEY, tokens.colorScheme)
+  } catch {}
+}
+
 function withLocalScheme(remote: PlatformTheme): PlatformTheme {
   const local = readLocalScheme()
-  const target = local || remote.colorScheme || 'dark'
-  const applied = applySchemeToTheme(remote, target)
+  if (!local || local === remote.colorScheme) return remote
+  const applied = applySchemeToTheme(remote, local)
   return {
     ...applied,
     version: remote.version,
@@ -69,9 +90,7 @@ function withLocalScheme(remote: PlatformTheme): PlatformTheme {
 
 function mapTheme(data: any): PlatformTheme {
   const remoteScheme: ColorScheme = data.color_scheme === 'light' ? 'light' : 'dark'
-  const local = readLocalScheme()
-  const colorScheme: ColorScheme = local ?? remoteScheme
-  const base = colorScheme === 'light' ? { ...LIGHT_DEFAULTS } : { ...DARK_DEFAULTS }
+  const base = remoteScheme === 'light' ? { ...LIGHT_DEFAULTS } : { ...DARK_DEFAULTS }
   const accent = data.accent ?? data.signal ?? base.accent
   const accent2 = data.accent2 ?? data.accent_2 ?? base.accent2
   return {
@@ -83,7 +102,7 @@ function mapTheme(data: any): PlatformTheme {
     signalSoft: data.signal_soft ?? base.signalSoft,
     alert: data.alert ?? base.alert,
     atmosphereMode: data.atmosphere_mode ?? base.atmosphereMode,
-    colorScheme,
+    colorScheme: remoteScheme,
     version: data.version ?? 0,
     updatedAt: data.updated_at,
     accent,
@@ -103,8 +122,11 @@ async function fetchTheme(): Promise<PlatformTheme> {
 }
 
 async function putTheme(tokens: ThemeTokens): Promise<PlatformTheme> {
-  // Ensure the tokens being persisted match the scheme's background & text rules
-  const normalized = applySchemeToTheme(tokens, tokens.colorScheme)
+  const accent = tokens.accent || tokens.signal || '#6366f1'
+  const accent2 = tokens.accent2 || accent
+  const signalSoft = tokens.signalSoft || (tokens.colorScheme === 'dark' ? 'rgba(129,140,248,0.15)' : '#e0e7ff')
+  const normalized: ThemeTokens = { ...tokens, accent, accent2, signal: tokens.signal || accent, signalSoft }
+  persistTheme(normalized)
   const res = await fetch(`${apiBase()}/api/v1/platform/theme`, {
     method: 'PUT',
     headers: {
@@ -112,26 +134,27 @@ async function putTheme(tokens: ThemeTokens): Promise<PlatformTheme> {
       Authorization: `Bearer ${platformToken()}`,
     },
     body: JSON.stringify({
-      ink: normalized.ink,
-      ink_soft: normalized.inkSoft,
-      mist: normalized.mist,
-      mist_deep: normalized.mistDeep,
-      signal: normalized.signal,
-      signal_soft: normalized.signalSoft,
-      alert: normalized.alert,
-      atmosphere_mode: normalized.atmosphereMode,
-      color_scheme: normalized.colorScheme,
-      accent: normalized.accent ?? normalized.signal,
-      accent2: normalized.accent2 ?? normalized.signal,
-      radius: normalized.radius,
-      radius_sm: normalized.radiusSm,
-      radius_lg: normalized.radiusLg,
-      font_display: normalized.fontDisplay,
-      font_body: normalized.fontBody,
+      ink: tokens.ink,
+      ink_soft: tokens.inkSoft,
+      mist: tokens.mist,
+      mist_deep: tokens.mistDeep,
+      signal: tokens.signal || accent,
+      signal_soft: signalSoft,
+      alert: tokens.alert,
+      atmosphere_mode: tokens.atmosphereMode || (tokens.colorScheme === 'dark' ? 'void' : 'mist'),
+      color_scheme: tokens.colorScheme,
+      accent,
+      accent2,
+      radius: tokens.radius,
+      radius_sm: tokens.radiusSm,
+      radius_lg: tokens.radiusLg,
+      font_display: tokens.fontDisplay,
+      font_body: tokens.fontBody,
     }),
   })
   if (!res.ok) {
     const body = await res.text()
+    console.error('Failed to save theme to backend:', body)
     throw new Error(body || `theme save failed (${res.status})`)
   }
   return fetchTheme()
@@ -139,6 +162,13 @@ async function putTheme(tokens: ThemeTokens): Promise<PlatformTheme> {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const initialTheme = useMemo(() => {
+    const saved = readSavedTheme()
+    if (saved) {
+      const local = readLocalScheme()
+      const target = local || saved.colorScheme
+      if (target !== saved.colorScheme) return { ...applySchemeToTheme(saved, target), version: (saved as PlatformTheme).version ?? 0 }
+      return { ...saved, version: (saved as PlatformTheme).version ?? 0 } as PlatformTheme
+    }
     const local = readLocalScheme()
     const target = local || WATCHLINE_DEFAULTS.colorScheme
     return {
@@ -151,7 +181,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [localScheme, setLocalSchemeState] = useState<ColorScheme | null>(readLocalScheme)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const versionRef = useRef(0)
+  const versionRef = useRef(initialTheme.version)
+  const themeRef = useRef(theme)
+  useEffect(() => {
+    themeRef.current = theme
+  }, [theme])
 
   const setLocalScheme = useCallback((scheme: ColorScheme | null) => {
     try {
@@ -159,19 +193,29 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(SCHEME_KEY, scheme)
       } else {
         localStorage.removeItem(SCHEME_KEY)
+        const saved = readSavedTheme()
+        if (saved) localStorage.setItem(SCHEME_KEY, saved.colorScheme)
       }
     } catch {}
+    const nextScheme = scheme || readSavedTheme()?.colorScheme || null
     setLocalSchemeState(scheme)
     setTheme((prev) => {
       const target = scheme || prev.colorScheme || 'dark'
       const next = applySchemeToTheme(prev, target)
       applyThemeTokens(next)
+      persistTheme(next)
       return { ...next, version: prev.version, updatedAt: prev.updatedAt }
     })
+    if (scheme === null && nextScheme) setLocalSchemeState(nextScheme as ColorScheme | null)
   }, [])
 
   const applyLocal = useCallback((tokens: ThemeTokens, version?: number) => {
     applyThemeTokens(tokens)
+    persistTheme(tokens)
+    try {
+      localStorage.setItem(SCHEME_KEY, tokens.colorScheme)
+      setLocalSchemeState(tokens.colorScheme)
+    } catch {}
     setTheme((prev) => ({
       ...tokens,
       version: version ?? prev.version,
@@ -184,15 +228,28 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       const remote = await fetchTheme()
       const effective = withLocalScheme(remote)
       applyThemeTokens(effective)
+      persistTheme(effective)
+      try {
+        localStorage.setItem(SCHEME_KEY, effective.colorScheme)
+        setLocalSchemeState(readLocalScheme())
+      } catch {}
       versionRef.current = effective.version
       setTheme(effective)
       setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'theme unavailable')
-      const local = readLocalScheme() || 'dark'
-      const fallback = applySchemeToTheme(WATCHLINE_DEFAULTS, local)
-      applyThemeTokens(fallback)
-      setTheme({ ...fallback, version: 0 })
+      const saved = readSavedTheme()
+      if (saved) {
+        const local = readLocalScheme()
+        const fallback = local && local !== saved.colorScheme ? applySchemeToTheme(saved, local) : saved
+        applyThemeTokens(fallback as PlatformTheme)
+        setTheme({ ...(fallback as PlatformTheme), version: versionRef.current } as PlatformTheme)
+      } else {
+        const local = readLocalScheme() || 'dark'
+        const fallback = applySchemeToTheme(WATCHLINE_DEFAULTS, local)
+        applyThemeTokens(fallback)
+        setTheme({ ...fallback, version: 0 })
+      }
     } finally {
       setLoading(false)
     }
@@ -202,49 +259,72 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const next = await putTheme(tokens)
     const effective = withLocalScheme(next)
     applyThemeTokens(effective)
+    persistTheme(effective)
     versionRef.current = effective.version
     setTheme(effective)
+    setLocalSchemeState(readLocalScheme())
     setError(null)
   }, [])
 
   const resetDefaults = useCallback(async () => {
+    try {
+      localStorage.removeItem(SCHEME_KEY)
+      localStorage.removeItem(THEME_KEY)
+      localStorage.removeItem(LEGACY_SAVED_KEY)
+    } catch {}
+    setLocalSchemeState(null)
     await save(WATCHLINE_DEFAULTS)
   }, [save])
 
   const applySchemePreset = useCallback(
     (scheme: ColorScheme) => {
-      try {
-        localStorage.setItem(SCHEME_KEY, scheme)
-      } catch {}
-      setLocalSchemeState(scheme)
-      const next = applySchemeToTheme(theme, scheme)
-      applyLocal(next, theme.version)
+      setTheme((prev) => {
+        const next = applySchemeToTheme(prev, scheme)
+        applyThemeTokens(next)
+        persistTheme(next)
+        try {
+          localStorage.setItem(SCHEME_KEY, scheme)
+        } catch {}
+        setLocalSchemeState(scheme)
+        return { ...next, version: prev.version, updatedAt: prev.updatedAt }
+      })
     },
-    [applyLocal, theme],
+    [],
   )
 
   const toggleColorMode = useCallback(() => {
-    const next: ColorScheme = theme.colorScheme === 'dark' ? 'light' : 'dark'
-    try {
-      localStorage.setItem(SCHEME_KEY, next)
-    } catch {}
-    setLocalSchemeState(next)
-    const nextTheme = applySchemeToTheme(theme, next)
-    applyLocal(nextTheme, theme.version)
-  }, [theme, applyLocal])
+    setTheme((prev) => {
+      const nextScheme: ColorScheme = prev.colorScheme === 'dark' ? 'light' : 'dark'
+      try {
+        localStorage.setItem(SCHEME_KEY, nextScheme)
+      } catch {}
+      setLocalSchemeState(nextScheme)
+      const nextTheme = applySchemeToTheme(prev, nextScheme)
+      applyThemeTokens(nextTheme)
+      persistTheme(nextTheme)
+      return { ...nextTheme, version: prev.version, updatedAt: prev.updatedAt }
+    })
+  }, [])
 
-  // Sync when localStorage is modified externally or in another tab
   useEffect(() => {
     const handleStorage = (e: StorageEvent) => {
-      if (e.key === SCHEME_KEY) {
-        const val = e.newValue === 'light' || e.newValue === 'dark' ? (e.newValue as ColorScheme) : null
+      if (e.key === SCHEME_KEY || e.key === THEME_KEY || e.key === LEGACY_SAVED_KEY) {
+        const val = readLocalScheme()
         setLocalSchemeState(val)
-        setTheme((prev) => {
-          const target = val || prev.colorScheme || 'dark'
-          const next = applySchemeToTheme(prev, target)
-          applyThemeTokens(next)
-          return { ...next, version: prev.version, updatedAt: prev.updatedAt }
-        })
+        const saved = readSavedTheme()
+        if (saved) {
+          const target = val || saved.colorScheme
+          const next = target !== saved.colorScheme ? applySchemeToTheme(saved, target) : saved
+          applyThemeTokens(next as PlatformTheme)
+          setTheme((prev) => ({ ...(next as PlatformTheme), version: prev.version } as PlatformTheme))
+        } else {
+          setTheme((prev) => {
+            const target = val || prev.colorScheme || 'dark'
+            const next = applySchemeToTheme(prev, target)
+            applyThemeTokens(next)
+            return { ...next, version: prev.version, updatedAt: prev.updatedAt }
+          })
+        }
       }
     }
     window.addEventListener('storage', handleStorage)
@@ -262,11 +342,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
           versionRef.current = remote.version
           const next = withLocalScheme(remote)
           applyThemeTokens(next)
+          persistTheme(next)
           setTheme(next)
           setError(null)
-        } catch {
-          /* keep last good theme while offline */
-        }
+        } catch {}
       })()
     }, THEME_POLL_MS)
     return () => window.clearInterval(id)
