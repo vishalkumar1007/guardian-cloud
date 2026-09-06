@@ -49,8 +49,8 @@ export function GeneralSaaSForm() {
   return (
     <div className="space-y-5 font-mono text-xs max-w-4xl">
       {saved && (
-        <div className="p-3 rounded-xl border border-emerald-800/60 bg-emerald-950/30 text-emerald-300 flex items-center gap-2">
-          <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+        <div className="p-3 rounded-xl border border-signal/30 bg-signal/10 text-signal flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4 text-signal" />
           <span>Guardian general settings saved — applied to all clusters (mock).</span>
         </div>
       )}
@@ -102,7 +102,7 @@ export function GeneralSaaSForm() {
 
         <div className="rounded-2xl border border-line bg-surface p-5 space-y-4 shadow-sm">
           <div className="flex items-center gap-2">
-            <Globe className="h-4 w-4 text-sky-500" />
+            <Globe className="h-4 w-4 text-signal" />
             <h4 className="font-display text-sm font-bold text-ink">Locale & Region</h4>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -152,7 +152,7 @@ export function GeneralSaaSForm() {
 
         <div className="rounded-2xl border border-line bg-surface p-5 space-y-4 shadow-sm">
           <div className="flex items-center gap-2">
-            <Timer className="h-4 w-4 text-amber-500" />
+            <Timer className="h-4 w-4 text-signal" />
             <h4 className="font-display text-sm font-bold text-ink">Trial & Lifecycle Rules</h4>
             <span className="text-[10px] text-ink-soft ml-auto">Mock — writes to audit log</span>
           </div>
@@ -180,7 +180,7 @@ export function GeneralSaaSForm() {
 
         <div className="rounded-2xl border border-line bg-surface p-5 space-y-4 shadow-sm">
           <div className="flex items-center gap-2">
-            <Scale className="h-4 w-4 text-violet-500" />
+            <Scale className="h-4 w-4 text-signal" />
             <h4 className="font-display text-sm font-bold text-ink">Contact & Legal</h4>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -217,7 +217,7 @@ export function GeneralSaaSForm() {
 
         <div className="rounded-2xl border border-line bg-surface p-5 space-y-3 shadow-sm">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-emerald-500" />
+            <ShieldCheck className="h-4 w-4 text-signal" />
             <h4 className="font-display text-sm font-bold text-ink">Enforcement Posture</h4>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

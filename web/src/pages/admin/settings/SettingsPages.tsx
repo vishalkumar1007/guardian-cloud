@@ -67,8 +67,8 @@ export function SettingsPages() {
   return (
     <div className="space-y-5 font-mono text-xs max-w-2xl">
       {savedSuccess && (
-        <div className="p-3 rounded-xl border border-emerald-800/60 bg-emerald-950/30 text-emerald-300 flex items-center gap-2 animate-in fade-in">
-          <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+        <div className="p-3 rounded-xl border border-signal/30 bg-signal/10 text-signal flex items-center gap-2 animate-in fade-in">
+          <CheckCircle2 className="h-4 w-4 text-signal" />
           <span>Platform settings successfully saved and applied to all clusters.</span>
         </div>
       )}
@@ -109,7 +109,7 @@ export function SettingsPages() {
               <button
                 type="button"
                 onClick={handleTriggerDangerousAction}
-                className="px-3 py-1.5 rounded-lg border border-rose-900 bg-rose-950/30 text-rose-400 hover:bg-rose-950/60"
+                className="px-3 py-1.5 rounded-lg border border-alert/40 bg-alert/10 text-alert hover:bg-alert/20"
               >
                 Flush All Active Platform Sessions (Dangerous)
               </button>

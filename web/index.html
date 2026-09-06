@@ -8,30 +8,21 @@
     <script>
       (() => {
         try {
-          var themeRaw = localStorage.getItem('guardian-theme') || localStorage.getItem('guardian-saved-theme');
-          var theme = null;
-          if (themeRaw) { try { theme = JSON.parse(themeRaw); } catch(e) {} }
-          var scheme = localStorage.getItem('guardian-color-scheme');
-          if (scheme !== 'light' && scheme !== 'dark') scheme = null;
-          if (!scheme && theme && (theme.colorScheme === 'light' || theme.colorScheme === 'dark')) scheme = theme.colorScheme;
-          if (scheme) {
-            document.documentElement.setAttribute('data-theme', scheme);
-            document.documentElement.dataset.theme = scheme;
-            document.documentElement.classList.toggle('dark', scheme === 'dark');
-            document.documentElement.style.colorScheme = scheme;
-          } else {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            document.documentElement.dataset.theme = 'dark';
-            document.documentElement.classList.add('dark');
-            document.documentElement.style.colorScheme = 'dark';
-          }
-          if (theme) {
-            var r = document.documentElement;
-            if (theme.accent) { r.style.setProperty('--g-accent', theme.accent); r.style.setProperty('--accent', theme.accent); }
-            if (theme.accent2) r.style.setProperty('--g-accent-2', theme.accent2);
-            if (theme.fontDisplay) r.style.setProperty('--g-font-display', theme.fontDisplay);
-            if (theme.fontBody) r.style.setProperty('--g-font-body', theme.fontBody);
-          }
+          // Purge legacy personal theme keys — API is source of truth
+          try {
+            var remove = [];
+            for (var i = 0; i < localStorage.length; i++) {
+              var k = localStorage.key(i);
+              if (k && (k === 'guardian-admin-theme' || k.indexOf('guardian-admin-theme:') === 0)) remove.push(k);
+            }
+            remove.forEach(function (key) { localStorage.removeItem(key); });
+          } catch (e) {}
+          // Public FOUC: safe default only. Brand theme hydrates from GET /api/v1/platform/theme.
+          // Do not apply stale guardian-theme / guardian-admin-theme as authority.
+          document.documentElement.setAttribute('data-theme', 'dark');
+          document.documentElement.dataset.theme = 'dark';
+          document.documentElement.classList.add('dark');
+          document.documentElement.style.colorScheme = 'dark';
         } catch(e) {}
       })()
     </script>

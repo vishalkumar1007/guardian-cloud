@@ -31,6 +31,26 @@ services:
     ports:
       - "127.0.0.1:6381:6379"
 
+  api:
+    build:
+      context: ..
+      dockerfile: deployments/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      PORT: "8083"
+      DATABASE_URL: postgres://guardian:${POSTGRES_PASSWORD:-guardian}@postgres:5432/guardian_cloud?sslmode=disable
+      REDIS_URL: redis://redis:6379/0
+      GUARDIAN_PLATFORM_DEV_TOKEN: ${GUARDIAN_PLATFORM_DEV_TOKEN:-guardian-dev-super-admin}
+      PUBLIC_BASE_URL: http://127.0.0.1:8083
+      PUBLIC_WEB_URL: ${PUBLIC_WEB_URL:-http://127.0.0.1:5175}
+    ports:
+      - "127.0.0.1:8083:8083"
+
 volumes:
   postgres_data:
   redis_data:

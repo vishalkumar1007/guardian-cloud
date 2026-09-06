@@ -1,31 +1,19 @@
-import React, { useState, useEffect } from 'react'
-import { Outlet, useNavigate, useLocation } from 'react-router-dom'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
+import { Outlet } from 'react-router-dom'
 import { SuperSidebar } from './components/SuperSidebar'
 import { SuperHeader } from './components/SuperHeader'
 import { CommandPalette } from './components/CommandPalette'
+import { useNavPrefs } from '../theme/navPrefs'
+import { useAdminTheme } from '../theme/adminTheme'
+import { useTheme } from '../theme/useTheme'
+import { themeTokensToCssVars, applyThemeTokensToElement, applyThemeTokens, setDashboardShellOwnsTheme } from '../theme/tokens'
+import { ensureSessionUserId } from '../theme/session'
 
 export function SuperAdminShell() {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const [collapsed, setCollapsed] = useState(() => {
-    try {
-      return localStorage.getItem('guardian-super-sidebar') === 'collapsed'
-    } catch {
-      return false
-    }
-  })
+  const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [cmdPaletteOpen, setCmdPaletteOpen] = useState(false)
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('guardian-super-sidebar', collapsed ? 'collapsed' : 'expanded')
-    } catch {
-      // ignore
-    }
-  }, [collapsed])
-
-  // Ensure demo session exists so reviewer can immediately browse all admin routes
   useEffect(() => {
     const session = localStorage.getItem('super_admin_session')
     if (!session) {
@@ -35,10 +23,11 @@ export function SuperAdminShell() {
         role: 'SUPER_ADMIN',
         name: 'Alexander Vance',
       }))
+    } else {
+      ensureSessionUserId()
     }
   }, [])
 
-  // Keyboard shortcut listener for Cmd+K / Ctrl+K
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -50,17 +39,90 @@ export function SuperAdminShell() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
+  const { prefs } = useNavPrefs()
+  const { adminTheme, loading: adminThemeLoading, isPersonal } = useAdminTheme()
+  const { theme: globalTheme } = useTheme()
+  // While hydrating personal preference, follow Brand to avoid a flash of stale custom theme
+  const effective = (!adminThemeLoading && isPersonal && adminTheme) ? adminTheme : globalTheme
+  const shellRef = useRef<HTMLDivElement>(null)
+  const globalThemeRef = useRef(globalTheme)
+  globalThemeRef.current = globalTheme
+
+  // Personal mode may override radius via nav prefs; Following Brand uses Brand radius only.
+  const shellStyle = useMemo(() => {
+    const vars = themeTokensToCssVars(effective)
+    if (!isPersonal) return vars as React.CSSProperties
+    const radius = prefs.adminRadius
+    const radiusSm = prefs.adminRadiusSm
+    const radiusLg = prefs.adminRadiusLg
+    return {
+      ...vars,
+      ['--g-radius']: radius,
+      ['--g-radius-sm']: radiusSm,
+      ['--g-radius-lg']: radiusLg,
+      ['--radius']: radius,
+      ['--radius-sm']: radiusSm,
+      ['--radius-md']: radius,
+      ['--radius-lg']: radius,
+      ['--radius-xl']: radiusLg,
+      ['--radius-2xl']: radiusLg,
+      ['--radius-3xl']: radiusLg,
+    } as React.CSSProperties
+  }, [isPersonal, prefs.adminRadius, prefs.adminRadiusSm, prefs.adminRadiusLg, effective])
+
+  const dataTheme = effective.colorScheme
+  const dataAtmos = effective.atmosphereMode || (dataTheme === 'dark' ? 'void' : 'mist')
+
+  // Own document theme while the dashboard is mounted.
+  useEffect(() => {
+    setDashboardShellOwnsTheme(true)
+    return () => {
+      setDashboardShellOwnsTheme(false)
+      applyThemeTokens(globalThemeRef.current, { force: true })
+    }
+  }, [])
+
+  // Keep shell + document tokens in sync with Following Brand / personal effective theme.
+  useEffect(() => {
+    applyThemeTokens(effective, { force: true })
+    const el = shellRef.current
+    if (!el) return
+    applyThemeTokensToElement(el, effective)
+    if (isPersonal) {
+      const radius = prefs.adminRadius
+      const radiusSm = prefs.adminRadiusSm
+      const radiusLg = prefs.adminRadiusLg
+      el.style.setProperty('--g-radius', radius)
+      el.style.setProperty('--g-radius-sm', radiusSm)
+      el.style.setProperty('--g-radius-lg', radiusLg)
+      el.style.setProperty('--radius', radius)
+      el.style.setProperty('--radius-sm', radiusSm)
+      el.style.setProperty('--radius-md', radius)
+      el.style.setProperty('--radius-lg', radius)
+      el.style.setProperty('--radius-xl', radiusLg)
+      el.style.setProperty('--radius-2xl', radiusLg)
+      el.style.setProperty('--radius-3xl', radiusLg)
+    }
+  }, [effective, isPersonal, prefs.adminRadius, prefs.adminRadiusSm, prefs.adminRadiusLg])
+
   return (
-    <div className="h-screen overflow-hidden bg-mist text-ink flex font-sans transition-colors duration-200">
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:block shrink-0">
+    <div
+      ref={shellRef}
+      className="g-dashboard-shell h-screen overflow-hidden g-atmosphere text-ink flex font-sans transition-[background,color,font] duration-300"
+      data-theme={dataTheme}
+      data-atmosphere={dataAtmos}
+      style={{
+        ...shellStyle,
+        fontFamily: 'var(--g-font-body)',
+      }}
+    >
+      <div className="hidden lg:block shrink-0 relative z-10">
         <SuperSidebar
           collapsed={collapsed}
           onToggleCollapse={() => setCollapsed(!collapsed)}
         />
       </div>
 
-      {/* Mobile Drawer */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 flex lg:hidden">
           <div
@@ -77,8 +139,7 @@ export function SuperAdminShell() {
         </div>
       )}
 
-      {/* Main Content Area */}
-      <div className="flex flex-1 flex-col min-w-0 h-screen overflow-hidden bg-mist g-atmosphere relative">
+      <div className="relative z-10 flex flex-1 flex-col min-w-0 h-screen overflow-hidden bg-transparent" data-theme={dataTheme} data-atmosphere={dataAtmos}>
         <SuperHeader
           onOpenMobileMenu={() => setMobileOpen(true)}
           onOpenCommandPalette={() => setCmdPaletteOpen(true)}
@@ -91,7 +152,6 @@ export function SuperAdminShell() {
         </main>
       </div>
 
-      {/* Command Palette Modal */}
       <CommandPalette
         isOpen={cmdPaletteOpen}
         onClose={() => setCmdPaletteOpen(false)}

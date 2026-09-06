@@ -12,7 +12,9 @@ import {
   CheckCircle2,
 } from 'lucide-react'
 import { useTheme } from '../../theme/useTheme'
+import { useNavPrefs } from '../../theme/navPrefs'
 import { NotificationCenter } from './NotificationCenter'
+import { cn } from '../../lib/utils'
 
 interface SuperHeaderProps {
   onOpenMobileMenu: () => void
@@ -23,6 +25,7 @@ export function SuperHeader({ onOpenMobileMenu, onOpenCommandPalette }: SuperHea
   const location = useLocation()
   const navigate = useNavigate()
   const { theme, toggleColorMode } = useTheme()
+  const { prefs } = useNavPrefs()
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
 
@@ -33,8 +36,13 @@ export function SuperHeader({ onOpenMobileMenu, onOpenCommandPalette }: SuperHea
     navigate('/super/login')
   }
 
+  const heightClass = prefs.topHeight === '56' ? 'h-14' : 'h-16'
+  const blurClass = prefs.topBlur === 'none' ? '' : prefs.topBlur === 'md' ? 'backdrop-blur-md' : 'backdrop-blur-xl'
+  const opacityClass = prefs.topOpacity === '70' ? 'bg-surface/70' : prefs.topOpacity === '90' ? 'bg-surface/90' : 'bg-surface/75'
+  const syncedBg = prefs.syncWithSidebar ? 'bg-surface/80' : opacityClass
+
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-line bg-surface/90 backdrop-blur-xl px-4 select-none transition-colors duration-200">
+    <header className={cn('sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-line px-4 select-none transition-colors duration-200', heightClass, syncedBg, blurClass)}>
       <div className="flex items-center gap-3 min-w-0">
         <button
           type="button"
@@ -44,7 +52,7 @@ export function SuperHeader({ onOpenMobileMenu, onOpenCommandPalette }: SuperHea
           <Menu className="h-4 w-4" />
         </button>
 
-        <nav className="flex items-center gap-1.5 font-mono text-xs text-ink-soft overflow-hidden">
+        {prefs.showBreadcrumbs && <nav className="flex items-center gap-1.5 font-mono text-xs text-ink-soft overflow-hidden">
           <Link to="/admin" className="text-ink-soft hover:text-ink no-underline shrink-0">
             Super Admin
           </Link>
@@ -66,10 +74,10 @@ export function SuperHeader({ onOpenMobileMenu, onOpenCommandPalette }: SuperHea
               </React.Fragment>
             )
           })}
-        </nav>
+        </nav>}
       </div>
 
-      <div className="hidden md:flex flex-1 max-w-sm mx-4">
+      {prefs.showSearch && <div className="hidden md:flex flex-1 max-w-sm mx-4">
         <button
           type="button"
           onClick={onOpenCommandPalette}
@@ -83,13 +91,14 @@ export function SuperHeader({ onOpenMobileMenu, onOpenCommandPalette }: SuperHea
             ⌘K
           </kbd>
         </button>
-      </div>
+      </div>}
+      {!prefs.showSearch && <div className="hidden md:flex flex-1 max-w-sm mx-4" />}
 
       <div className="flex items-center gap-2">
-        <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-signal/20 bg-signal/10 px-2.5 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-signal shadow-sm">
+        {prefs.showDemoBadge && <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-signal/20 bg-signal/10 px-2.5 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-signal shadow-sm">
           <span className="h-1.5 w-1.5 rounded-full bg-signal animate-pulse" />
           <span>Demo Mode</span>
-        </div>
+        </div>}
 
         <button
           type="button"
@@ -99,7 +108,7 @@ export function SuperHeader({ onOpenMobileMenu, onOpenCommandPalette }: SuperHea
           <Search className="h-4 w-4" />
         </button>
 
-        <div className="relative">
+        {prefs.showNotifications && <div className="relative">
           <button
             type="button"
             onClick={() => setNotificationsOpen(!notificationsOpen)}
@@ -114,9 +123,9 @@ export function SuperHeader({ onOpenMobileMenu, onOpenCommandPalette }: SuperHea
             isOpen={notificationsOpen}
             onClose={() => setNotificationsOpen(false)}
           />
-        </div>
+        </div>}
 
-        <button
+        {prefs.showThemeToggle && <button
           type="button"
           onClick={toggleColorMode}
           className="flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-surface text-ink-soft hover:text-ink hover:border-line transition-colors"
@@ -124,7 +133,7 @@ export function SuperHeader({ onOpenMobileMenu, onOpenCommandPalette }: SuperHea
           aria-label={`Switch to ${theme.colorScheme === 'dark' ? 'light' : 'dark'} mode`}
         >
           {theme.colorScheme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-        </button>
+        </button>}
 
         <div className="relative">
           <button

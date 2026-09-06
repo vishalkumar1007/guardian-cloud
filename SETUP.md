@@ -6,34 +6,26 @@
 |----------|------------------|
 | Postgres | `127.0.0.1:5434` → `5432` |
 | Redis    | `127.0.0.1:6381` → `6379` |
-| API      | `127.0.0.1:8083` (local process) |
-| Web      | `127.0.0.1:5175` (Vite) |
+| API      | `127.0.0.1:8083` → `8083` (Compose `api` service) |
+| Web      | `127.0.0.1:5175` (Vite, local) |
 
 Avanor: 5432 / 6379 / 8080. Orbit: 5433 / 6380 / 8081.
 
-## 1. Dependencies
+## 1. Start Postgres + Redis + API
+
+From `guardian-cloud` (root `docker-compose.yml` includes `deployments/`):
 
 ```bash
 cd Guardian/guardian-cloud
-cp .env.example deployments/.env
-
-docker compose -f deployments/docker-compose.yml up -d
-
-# wait until healthy
-docker compose -f deployments/docker-compose.yml ps
+docker compose up -d --build
+# or: ./scripts/dev-api.sh
+docker compose ps
 ```
 
-## 2. Migrate + API
+The `api` service has `restart: unless-stopped`, migrates on boot, and serves:
 
-```bash
-export DATABASE_URL='postgres://guardian:guardian@127.0.0.1:5434/guardian_cloud?sslmode=disable'
-export REDIS_URL='redis://127.0.0.1:6381/0'
-export PORT=8083
-export GUARDIAN_PLATFORM_DEV_TOKEN=guardian-dev-super-admin
-
-go run ./cmd/server migrate
-go run ./cmd/server
-```
+- `GET /api/v1/platform/theme`
+- `GET/PUT/DELETE /api/v1/admin/dashboard-theme`
 
 Health check:
 
@@ -42,10 +34,33 @@ curl -s http://127.0.0.1:8083/healthz
 # {"status":"ok","request_id":"..."}
 ```
 
+## 2. Optional: run API on the host instead
+
+Only if you are iterating on Go without rebuilding the image:
+
+```bash
+# stop the compose API so port 8083 is free
+docker compose stop api
+
+export DATABASE_URL='postgres://guardian:guardian@127.0.0.1:5434/guardian_cloud?sslmode=disable'
+export REDIS_URL='redis://127.0.0.1:6381/0'
+export PORT=8083
+export GUARDIAN_PLATFORM_DEV_TOKEN=guardian-dev-super-admin
+
+go run ./cmd/server
+```
+
 Platform theme (public GET):
 
 ```bash
 curl -s http://127.0.0.1:8083/api/v1/platform/theme
+```
+
+Dashboard theme (per admin):
+
+```bash
+curl -s -H "X-User-Id: 00000000-0000-4000-8000-0000000000bb" \
+  http://127.0.0.1:8083/api/v1/admin/dashboard-theme
 ```
 
 Theme update (temporary platform gate until F1.1 sessions):
@@ -62,7 +77,7 @@ Seeded super admin email: `superadmin@guardian.local` (platform_admins SUPER_ADM
 Verify tables:
 
 ```bash
-docker compose -f deployments/docker-compose.yml exec postgres \
+docker compose exec postgres \
   psql -U guardian -d guardian_cloud -c "\dt"
 ```
 
@@ -82,10 +97,9 @@ Open http://127.0.0.1:5175
 | `/` | Public home (product, plans, architecture, FAQ) |
 | `/login` | Sign in |
 | `/signup` | Create account |
+| `/admin/...` | Super-admin dashboard (Brand Studio + Theme & Customized) |
 
-Personal / Org / Super Admin dashboards are deferred (routes removed until later phases).
-Use the nav sun/moon control for light/dark (saved in `localStorage`).
-
+Brand Studio = global public theme (`platform_theme`). Theme & Customized = per-admin dashboard theme (`/api/v1/admin/dashboard-theme`).
 
 ## Later (not in F1.0 Compose)
 
@@ -95,5 +109,5 @@ be added when those features land.
 ## Migrations
 
 - Embedded via `migrations/embed.go` (`//go:embed *.sql`)
-- Runner: goose (Up on `migrate` and on `serve` boot)
-- Phase 1 files: `00001` … `00009` (… + `platform_theme` + `color_scheme`)
+- Runner: goose (Up on `migrate` and on `serve` / API container boot)
+- Theme-related: `00008`–`00010` (`platform_theme`), `00011`–`00013` (`admin_settings` + dashboard theme mode)

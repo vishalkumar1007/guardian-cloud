@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
 import { GuardianMark } from '../../components/GuardianMark'
+import { buildLoginSession } from '../../theme/session'
 
 export function SuperLoginPage() {
   const navigate = useNavigate()
@@ -36,7 +37,7 @@ export function SuperLoginPage() {
 
     setTimeout(() => {
       if (password.length >= 8) {
-        localStorage.setItem('super_admin_session', JSON.stringify({ email, at: Date.now(), rememberMe }))
+        localStorage.setItem('super_admin_session', JSON.stringify(buildLoginSession(email, rememberMe)))
         navigate('/super', { replace: true })
       } else {
         setError('Invalid credentials.')

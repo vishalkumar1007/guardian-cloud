@@ -19,6 +19,8 @@ import {
 } from 'lucide-react'
 import { GuardianMark } from '../../components/GuardianMark'
 import { cn } from '../../lib/utils'
+import { useNavPrefs } from '../../theme/navPrefs'
+import { Star } from 'lucide-react'
 
 interface SuperSidebarProps {
   collapsed: boolean
@@ -61,8 +63,8 @@ const ENTERPRISE_SECTION: NavSection = {
   title: 'Enterprise Subscription',
   subtitle: 'B2B tenants & fleet',
   icon: Building2,
-  accent: 'text-orange-500',
-  dot: 'bg-orange-500',
+  accent: 'text-signal',
+  dot: 'bg-signal',
   items: [
     {
       to: '/admin/organizations',
@@ -107,8 +109,8 @@ const USER_SECTION: NavSection = {
   title: 'User Subscription',
   subtitle: 'B2C personal licenses',
   icon: UserCircle,
-  accent: 'text-sky-500',
-  dot: 'bg-sky-500',
+  accent: 'text-signal',
+  dot: 'bg-signal',
   items: [
     {
       to: '/admin/users',
@@ -141,8 +143,8 @@ const SUPERADMIN_SECTION: NavSection = {
   title: 'Superadmin Management',
   subtitle: 'Platform & governance',
   icon: Shield,
-  accent: 'text-violet-500',
-  dot: 'bg-violet-500',
+  accent: 'text-signal',
+  dot: 'bg-signal',
   items: [
     {
       to: '/admin/security',
@@ -227,6 +229,13 @@ function buildSectionKey(sectionId: string, label: string) {
 
 export function SuperSidebar({ collapsed, onToggleCollapse, onMobileClose }: SuperSidebarProps) {
   const location = useLocation()
+  const { prefs } = useNavPrefs()
+  const widthMap: Record<string, string> = { '220': 'w-[220px]', '240': 'w-[240px]', '270': 'w-[270px]', '300': 'w-[300px]', '320': 'w-[320px]' }
+  const collapsedMap: Record<string, string> = { '56': 'w-[56px]', '68': 'w-[68px]', '80': 'w-[80px]' }
+  const widthClass = widthMap[prefs.width] || 'w-[270px]'
+  const collapsedClass = collapsedMap[prefs.collapsedWidth] || 'w-[68px]'
+  const densityPad = prefs.density === 'compact' ? 'py-1.5' : prefs.density === 'dense' ? 'py-1' : 'py-2.5'
+  const densityText = prefs.density === 'dense' ? 'text-[11px]' : 'text-xs'
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
     const map: Record<string, boolean> = {}
     NAV_SECTIONS.forEach((section) => {
@@ -249,11 +258,11 @@ export function SuperSidebar({ collapsed, onToggleCollapse, onMobileClose }: Sup
   return (
     <aside
       className={cn(
-        'flex flex-col border-r border-line bg-surface sticky top-0 h-screen shrink-0 transition-[width,background-color] duration-200 z-30 select-none',
-        collapsed ? 'w-[68px]' : 'w-[270px]',
+        'flex flex-col border-r border-line bg-surface/90 backdrop-blur-xl sticky top-0 h-screen shrink-0 transition-[width,background-color] duration-200 z-30 select-none',
+        collapsed ? collapsedClass : widthClass,
       )}
     >
-      <div className="flex h-14 items-center justify-between gap-2 border-b border-line px-3.5 shrink-0 bg-surface">
+      <div className="flex h-14 items-center justify-between gap-2 border-b border-line px-3.5 shrink-0 bg-surface/90 backdrop-blur-xl">
         <Link to="/admin" className="flex items-center gap-2.5 min-w-0 no-underline" onClick={onMobileClose}>
           <span
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-mist-deep shadow-sm font-bold"
@@ -279,6 +288,18 @@ export function SuperSidebar({ collapsed, onToggleCollapse, onMobileClose }: Sup
       </div>
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden py-2 font-mono text-xs">
+        {!collapsed && prefs.favorites.length > 0 && (
+          <div className="mx-2 mb-2 rounded-xl border border-signal/20 bg-signal/5 p-2">
+            <div className="flex items-center gap-1.5 px-1 pb-1 text-[10px] font-bold text-signal uppercase tracking-wide"><Star className="h-3 w-3 fill-signal text-signal" /> Favorites</div>
+            <div className="space-y-0.5">
+              {prefs.favorites.map((fav) => (
+                <NavLink key={fav} to={fav} onClick={onMobileClose} className={({ isActive }) => cn('flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs', isActive ? 'bg-signal/10 text-signal font-semibold' : 'text-ink-soft hover:bg-surface hover:text-ink')}>
+                  <span className="h-1.5 w-1.5 rounded-full bg-signal shrink-0" />{fav.split('/').pop()?.replace(/-/g, ' ') || fav}
+                </NavLink>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="px-2.5 pb-2">
           <NavLink
             to={OVERVIEW_ITEM.to}
@@ -286,7 +307,8 @@ export function SuperSidebar({ collapsed, onToggleCollapse, onMobileClose }: Sup
             onClick={onMobileClose}
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-2.5 rounded-xl px-2.5 py-2.5 transition-colors border',
+                'flex items-center gap-2.5 rounded-xl px-2.5 transition-colors border',
+                densityPad,
                 isActive
                   ? 'bg-signal/10 text-signal font-semibold border-signal/20'
                   : 'text-ink-soft hover:bg-surface-2 hover:text-ink border-transparent',
@@ -298,31 +320,40 @@ export function SuperSidebar({ collapsed, onToggleCollapse, onMobileClose }: Sup
             <OVERVIEW_ITEM.icon className="h-4 w-4 shrink-0" />
             {!collapsed && <span className="truncate font-sans font-semibold text-xs">Overview</span>}
           </NavLink>
-          {!collapsed && <p className="mt-1.5 px-1 font-mono text-[10px] leading-none text-ink-soft/70">Command center & live KPIs</p>}
+          {!collapsed && prefs.showSubtitles && <p className="mt-1.5 px-1 font-mono text-[10px] leading-none text-ink-soft/70">Command center & live KPIs</p>}
         </div>
 
-        {NAV_SECTIONS.map((section) => (
+        {NAV_SECTIONS.filter((s) => !prefs.hiddenSections.includes(s.id)).map((section) => (
           <div key={section.id} className={cn('mx-2 mt-3 rounded-xl border border-line/60 bg-surface-2/40 overflow-hidden', collapsed && 'bg-transparent border-transparent mx-1')}>
             {!collapsed ? (
-              <div className="flex items-center gap-2 px-2.5 pt-2.5 pb-2">
-                <span className={cn('flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border bg-surface', section.accent, 'border-current/20')}>
-                  <section.icon className="h-3.5 w-3.5" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <span className="block font-sans text-[11px] font-bold tracking-wide text-ink leading-none uppercase">{section.title}</span>
-                  <span className="block font-mono text-[10px] text-ink-soft truncate leading-none mt-1">{section.subtitle}</span>
+              prefs.showSubtitles ? (
+                <div className="flex items-center gap-2 px-2.5 pt-2.5 pb-2">
+                  {prefs.showSectionIcons && <span className={cn('flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border bg-surface', section.accent, 'border-current/20')}>
+                    <section.icon className="h-3.5 w-3.5" />
+                  </span>}
+                  <div className="min-w-0 flex-1">
+                    <span className="block font-sans text-[11px] font-bold tracking-wide text-ink leading-none uppercase">{section.title}</span>
+                    <span className="block font-mono text-[10px] text-ink-soft truncate leading-none mt-1">{section.subtitle}</span>
+                  </div>
+                  {prefs.showSectionDots && <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', section.dot)} />}
                 </div>
-                <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', section.dot)} />
-              </div>
+              ) : (
+                <div className="flex items-center gap-2 px-2.5 py-2">
+                  {prefs.showSectionIcons && <span className={cn('flex h-5 w-5 shrink-0 items-center justify-center rounded-lg border bg-surface', section.accent, 'border-current/20')}>
+                    <section.icon className="h-3 w-3.5" />
+                  </span>}
+                  <span className="font-sans text-xs font-semibold text-ink truncate">{section.title}</span>
+                </div>
+              )
             ) : (
               <div className="flex justify-center py-2">
-                <span className={cn('flex h-7 w-7 items-center justify-center rounded-lg border bg-surface', section.accent, 'border-current/20')}>
+                {prefs.showSectionIcons && <span className={cn('flex h-7 w-7 items-center justify-center rounded-lg border bg-surface', section.accent, 'border-current/20')}>
                   <section.icon className="h-3.5 w-3.5" />
-                </span>
+                </span>}
               </div>
             )}
 
-            {!collapsed && <div className="mx-2.5 border-t border-line/50 mb-1" />}
+            {!collapsed && prefs.showSubtitles && <div className="mx-2.5 border-t border-line/50 mb-1" />}
 
             <div className={cn('px-1.5 pb-2 space-y-0.5', collapsed && 'px-1')}>
               {section.items.map((item) => {
@@ -362,15 +393,16 @@ export function SuperSidebar({ collapsed, onToggleCollapse, onMobileClose }: Sup
                         toggleSection(section.id, item.label)
                       }}
                       className={cn(
-                        'w-full flex items-center justify-between rounded-lg px-2.5 py-2 text-left transition-colors group',
+                        'w-full flex items-center justify-between rounded-lg px-2.5 text-left transition-colors group',
+                        densityPad,
                         isParentActive ? 'text-ink bg-surface' : 'text-ink-soft hover:bg-surface hover:text-ink',
                         collapsed && 'justify-center px-0',
                       )}
                       title={collapsed ? item.label : undefined}
                     >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <item.icon className={cn('h-4 w-4 shrink-0', isParentActive ? section.accent : 'text-ink-soft')} />
-                        {!collapsed && <span className="truncate font-sans font-medium text-xs">{item.label}</span>}
+                       <div className="flex items-center gap-2.5 min-w-0">
+                        <item.icon className={cn('h-4 w-4 shrink-0', isParentActive ? section.accent : 'text-ink-soft', densityText)} />
+                        {!collapsed && <span className={cn('truncate font-sans font-medium', densityText)}>{item.label}</span>}
                       </div>
                       {!collapsed && (
                         <span className="text-ink-soft group-hover:text-ink">
@@ -414,7 +446,7 @@ export function SuperSidebar({ collapsed, onToggleCollapse, onMobileClose }: Sup
         ))}
       </div>
 
-      <div className="border-t border-line p-2.5 bg-surface">
+      {prefs.showFooterUser && <div className="border-t border-line p-2.5 bg-surface/90 backdrop-blur-xl">
         <div className={cn('flex items-center gap-2.5 rounded-xl border border-line bg-surface-2 p-2', collapsed && 'justify-center')}>
           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-signal/20 text-signal font-mono text-xs font-bold border border-signal/30">
             AV
@@ -426,7 +458,7 @@ export function SuperSidebar({ collapsed, onToggleCollapse, onMobileClose }: Sup
             </div>
           )}
         </div>
-      </div>
+      </div>}
     </aside>
   )
 }

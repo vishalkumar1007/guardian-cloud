@@ -147,7 +147,7 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
             >
               <div className="mt-0.5 shrink-0">
                 {item.type === 'CRITICAL_INCIDENT' ? (
-                  <ShieldAlert className="h-4 w-4 text-rose-400" />
+                  <ShieldAlert className="h-4 w-4 text-alert" />
                 ) : (
                   <Info className="h-4 w-4 text-signal" />
                 )}

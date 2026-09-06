@@ -125,7 +125,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
           {filteredUsers.length > 0 && (
             <div>
               <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-ink-soft font-semibold flex items-center gap-1.5">
-                <User className="h-3 w-3 text-sky-400" /> Individual Users
+                <User className="h-3 w-3 text-signal" /> Individual Users
               </div>
               <div className="space-y-1 mt-1">
                 {filteredUsers.map((u) => (
@@ -152,7 +152,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
           {filteredDevices.length > 0 && (
             <div>
               <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-ink-soft font-semibold flex items-center gap-1.5">
-                <Laptop className="h-3 w-3 text-emerald-400" /> Managed Devices
+                <Laptop className="h-3 w-3 text-signal" /> Managed Devices
               </div>
               <div className="space-y-1 mt-1">
                 {filteredDevices.map((d) => (
@@ -179,7 +179,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
           {filteredIncidents.length > 0 && (
             <div>
               <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-ink-soft font-semibold flex items-center gap-1.5">
-                <ShieldAlert className="h-3 w-3 text-rose-400" /> Security Incidents
+                <ShieldAlert className="h-3 w-3 text-alert" /> Security Incidents
               </div>
               <div className="space-y-1 mt-1">
                 {filteredIncidents.map((i) => (
@@ -189,7 +189,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                     className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-surface-2 text-left transition-colors text-ink hover:text-ink group"
                   >
                     <div className="flex items-center gap-2 min-w-0 pr-2">
-                      <span className="font-semibold text-rose-400 shrink-0">[{i.severity}]</span>
+                      <span className="font-semibold text-alert shrink-0">[{i.severity}]</span>
                       <span className="truncate text-ink">{i.title}</span>
                     </div>
                     <div className="flex items-center gap-2 text-ink-soft group-hover:text-signal shrink-0">
