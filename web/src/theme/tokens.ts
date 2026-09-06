@@ -17,6 +17,8 @@ export type ThemeTokens = {
   radiusLg: string
   fontDisplay: string
   fontBody: string
+  /** Curated pack id — kept across light/dark toggles so the same mood stays selected */
+  packId?: string
 }
 
 export type PlatformTheme = ThemeTokens & {
@@ -699,6 +701,53 @@ export function applyThemeTokens(
 export const LIGHT_ATMOS = new Set(['mist', 'daylight', 'paper', 'frost', 'sunrise', 'lagoon', 'blush'])
 export const DARK_ATMOS = new Set(['void', 'obsidian', 'aurora', 'nebula', 'ember', 'ocean', 'grid', 'snow', 'mesh', 'starfield'])
 
+/** Light ↔ dark atmosphere twins so scheme toggle keeps the same mood family. */
+export const ATMOSPHERE_SCHEME_PAIR: Record<string, string> = {
+  mist: 'void',
+  void: 'mist',
+  daylight: 'aurora',
+  aurora: 'daylight',
+  paper: 'obsidian',
+  obsidian: 'paper',
+  frost: 'snow',
+  snow: 'frost',
+  sunrise: 'ember',
+  ember: 'sunrise',
+  lagoon: 'ocean',
+  ocean: 'lagoon',
+  blush: 'nebula',
+  nebula: 'blush',
+  grid: 'daylight',
+  mesh: 'blush',
+  starfield: 'daylight',
+}
+
+export function pairAtmosphereForScheme(atmosphere: string, scheme: ColorScheme): string {
+  const inLight = LIGHT_ATMOS.has(atmosphere)
+  const inDark = DARK_ATMOS.has(atmosphere)
+  if (scheme === 'dark' && inDark) return atmosphere
+  if (scheme === 'light' && inLight) return atmosphere
+  const paired = ATMOSPHERE_SCHEME_PAIR[atmosphere]
+  if (paired) {
+    if (scheme === 'dark' && DARK_ATMOS.has(paired)) return paired
+    if (scheme === 'light' && LIGHT_ATMOS.has(paired)) return paired
+  }
+  return scheme === 'dark' ? 'void' : 'mist'
+}
+
+function canvasFromAtmosphereDonor(atmosphere: string, scheme: ColorScheme, accent: string) {
+  const donor = THEME_PACKS.find((p) => p.atmosphere === atmosphere && p.scheme === scheme)
+  const defaults = scheme === 'dark' ? DARK_DEFAULTS : LIGHT_DEFAULTS
+  return {
+    mist: donor?.mist || defaults.mist,
+    mistDeep: donor?.mistDeep || defaults.mistDeep,
+    ink: donor?.ink || defaults.ink,
+    inkSoft: donor?.inkSoft || defaults.inkSoft,
+    alert: donor?.alert || defaults.alert,
+    signalSoft: softAccent(accent, scheme),
+  }
+}
+
 export function applySchemeToTheme(baseTheme: ThemeTokens, newScheme: ColorScheme): ThemeTokens {
   const isDark = newScheme === 'dark'
   const modeDefaults = isDark ? DARK_DEFAULTS : LIGHT_DEFAULTS
@@ -714,7 +763,7 @@ export function applySchemeToTheme(baseTheme: ThemeTokens, newScheme: ColorSchem
     mistDeep: modeDefaults.mistDeep,
     alert: modeDefaults.alert,
     atmosphereMode: modeDefaults.atmosphereMode,
-    signalSoft: isDark ? 'rgba(129,140,248,0.15)' : '#e0e7ff',
+    signalSoft: softAccent(accent, newScheme),
     accent,
     accent2,
     signal: accent,
@@ -726,23 +775,27 @@ export function applySchemeToTheme(baseTheme: ThemeTokens, newScheme: ColorSchem
   }
 }
 
+/**
+ * Flip light/dark on top of the current pack mood.
+ * Keeps accent, typography, radius, packId; pairs atmosphere; borrows canvas from the twin mood.
+ */
 export function applySchemeToThemePreserve(baseTheme: ThemeTokens, newScheme: ColorScheme): ThemeTokens {
   if (baseTheme.colorScheme === newScheme) return baseTheme
-  const isDark = newScheme === 'dark'
-  const modeDefaults = isDark ? DARK_DEFAULTS : LIGHT_DEFAULTS
+  const modeDefaults = newScheme === 'dark' ? DARK_DEFAULTS : LIGHT_DEFAULTS
   const accent = baseTheme.accent || modeDefaults.accent
   const accent2 = baseTheme.accent2 || modeDefaults.accent2
-  const keepAtmos = (isDark ? DARK_ATMOS.has(baseTheme.atmosphereMode) : LIGHT_ATMOS.has(baseTheme.atmosphereMode)) ? baseTheme.atmosphereMode : modeDefaults.atmosphereMode
+  const atmosphereMode = pairAtmosphereForScheme(baseTheme.atmosphereMode || modeDefaults.atmosphereMode, newScheme)
+  const canvas = canvasFromAtmosphereDonor(atmosphereMode, newScheme, accent)
   return {
     ...baseTheme,
     colorScheme: newScheme,
-    ink: modeDefaults.ink,
-    inkSoft: modeDefaults.inkSoft,
-    mist: modeDefaults.mist,
-    mistDeep: modeDefaults.mistDeep,
-    alert: modeDefaults.alert,
-    atmosphereMode: keepAtmos,
-    signalSoft: softAccent(accent, newScheme),
+    atmosphereMode,
+    mist: canvas.mist,
+    mistDeep: canvas.mistDeep,
+    ink: canvas.ink,
+    inkSoft: canvas.inkSoft,
+    alert: baseTheme.alert || canvas.alert,
+    signalSoft: canvas.signalSoft,
     accent,
     accent2,
     signal: accent,
@@ -751,6 +804,7 @@ export function applySchemeToThemePreserve(baseTheme: ThemeTokens, newScheme: Co
     radiusLg: baseTheme.radiusLg || modeDefaults.radiusLg,
     fontDisplay: baseTheme.fontDisplay || modeDefaults.fontDisplay,
     fontBody: baseTheme.fontBody || modeDefaults.fontBody,
+    packId: baseTheme.packId,
   }
 }
 
@@ -778,6 +832,7 @@ export function themePackToTokens(p: ThemePack): ThemeTokens {
     ink: p.ink || base.ink,
     inkSoft: p.inkSoft || base.inkSoft,
     alert: p.alert || base.alert,
+    packId: p.id,
   }
 }
 

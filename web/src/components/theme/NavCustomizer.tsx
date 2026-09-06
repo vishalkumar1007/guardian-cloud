@@ -182,26 +182,6 @@ export function NavCustomizer() {
           </div>
         </div>
       )}
-
-      <div className="rounded-2xl border border-line bg-surface p-4 space-y-2">
-        <h4 className="font-display text-sm font-bold text-ink">Live Shell Preview — synced</h4>
-        <p className="text-ink-soft text-xs font-sans">Side {prefs.width}px / {prefs.density} + Top h{prefs.topHeight} {prefs.topOpacity}% blur-{prefs.topBlur} — over g-atmosphere.</p>
-        <div className="rounded-xl border border-line overflow-hidden bg-mist g-atmosphere flex" style={{ height: 200 }}>
-          <div className="border-r border-line bg-surface/80 backdrop-blur-xl p-2 space-y-1 shrink-0" style={{ width: prefs.width === '220' ? 80 : prefs.width === '240' ? 96 : prefs.width === '320' ? 128 : prefs.width === '300' ? 120 : 112 }}>
-            <div className="text-[9px] font-bold text-ink truncate">GUARDIAN</div>
-            {prefs.favorites.length > 0 && <div className="text-[8px] font-bold text-signal">★ {prefs.favorites.length}</div>}
-            <div className="text-[10px] px-1.5 py-1 rounded bg-signal/10 text-signal truncate">Platform Ops</div>
-            {!prefs.hiddenSections.includes('enterprise') && <div className="text-[9px] text-ink-soft">Enterprise</div>}
-          </div>
-          <div className="flex-1 flex flex-col min-w-0">
-            <div className={cn('border-b border-line bg-surface/80 flex items-center px-2 shrink-0', prefs.topHeight === '56' ? 'h-8' : 'h-10', prefs.topBlur === 'none' ? '' : prefs.topBlur === 'md' ? 'backdrop-blur-md' : 'backdrop-blur-xl')} style={{ backgroundColor: prefs.syncWithSidebar ? undefined : `color-mix(in srgb, var(--g-surface) ${prefs.topOpacity}%, transparent)` }}>
-              {prefs.showBreadcrumbs && <span className="text-[10px] text-ink-soft truncate">Super Admin / Platform</span>}
-              {prefs.showSearch && <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded border border-line bg-surface-2">⌘K</span>}
-            </div>
-            <div className="flex-1 p-2 text-[10px] text-ink-soft">density {prefs.density} · subtitles {prefs.showSubtitles ? 'on' : 'off'} · dots {prefs.showSectionDots ? 'on' : 'off'}</div>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }

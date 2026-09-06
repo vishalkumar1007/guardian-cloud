@@ -1,11 +1,12 @@
 import React, { useMemo, useState } from 'react'
-import { LayoutPanelLeft, Sparkles, Check, Info, Monitor, Moon, Sun, Layers, Palette, RefreshCw, AlertCircle } from 'lucide-react'
+import { LayoutPanelLeft, Sparkles, Check, Info, Monitor, Moon, Sun, Layers, Palette, RefreshCw, AlertCircle, Type } from 'lucide-react'
 import { useNavPrefs } from '../../theme/navPrefs'
 import {
   RADIUS_PRESETS,
   ACCENT_PRESETS,
   THEME_PACKS,
   ATMOSPHERE_PRESETS,
+  FONT_PAIRS,
   themePackToTokens,
   applySchemeToThemePreserve,
   softAccent,
@@ -24,6 +25,7 @@ const idleBtn = 'border-line bg-surface-2 hover:border-signal/40'
 const lockedBadge = 'text-[10px] px-2 py-0.5 rounded-full border border-line bg-surface-2 text-ink-soft'
 
 function isPackActive(draft: ThemeTokens, p: ThemePack) {
+  if (draft.packId) return draft.packId === p.id
   return (
     draft.accent.toLowerCase() === p.accent.toLowerCase() &&
     draft.atmosphereMode === p.atmosphere &&
@@ -119,10 +121,16 @@ export function AdminStudio() {
   const themeLocked = !isPersonal
   const [packTab, setPackTab] = useState<ColorScheme>(() => draft.colorScheme === 'light' ? 'light' : 'dark')
 
-  const tabPacks = useMemo(
-    () => THEME_PACKS.filter((p) => p.scheme === packTab),
-    [packTab],
-  )
+  const activePack = useMemo(() => THEME_PACKS.find((p) => isPackActive(draft, p)) || null, [draft])
+
+  const tabPacks = useMemo(() => {
+    const list = THEME_PACKS.filter((p) => p.scheme === packTab)
+    // Keep the chosen pack visible after light/dark overlay even if its home tab differs.
+    if (activePack && activePack.scheme !== packTab && !list.some((p) => p.id === activePack.id)) {
+      return [activePack, ...list]
+    }
+    return list
+  }, [packTab, activePack])
 
   function applyPack(p: ThemePack) {
     const tokens = themePackToTokens(p)
@@ -158,6 +166,17 @@ export function AdminStudio() {
       accent2: accent2 || accent,
       signal: accent,
       signalSoft: softAccent(accent, draft.colorScheme),
+      packId: undefined,
+    })
+  }
+
+  function handleFont(display: string, body: string) {
+    if (themeLocked) return
+    setAdminTheme({
+      ...draft,
+      fontDisplay: display,
+      fontBody: body,
+      packId: undefined,
     })
   }
 
@@ -264,7 +283,14 @@ export function AdminStudio() {
                 <Layers className="h-4 w-4 text-signal" /> Curated Packs
               </h4>
               <p className="text-ink-soft text-[11px] mt-0.5">
-                Pick a mood — canvas, type, radius, and atmosphere change together.
+                Pick a mood pack. Top-nav light/dark flips scheme on top of that pack — accent, type, and radius stay.
+                {activePack && (
+                  <> Active: <span className="text-ink font-semibold">{activePack.label}</span>
+                    {draft.colorScheme !== activePack.scheme && (
+                      <span className="text-signal"> · {draft.colorScheme} overlay</span>
+                    )}
+                  </>
+                )}
               </p>
             </div>
             <div className="flex items-center gap-1 p-0.5 rounded-lg border border-line bg-surface-2">
@@ -354,6 +380,38 @@ export function AdminStudio() {
                 >
                   <span className="h-6 w-6 rounded-lg shrink-0" style={{ background: `linear-gradient(135deg, ${p.accent}, ${p.accent2})` }} />
                   <span className="text-xs font-medium text-ink truncate">{p.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-line bg-surface p-5 space-y-4">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h4 className="font-display text-sm font-bold text-ink flex items-center gap-2">
+              <Type className="h-4 w-4 text-signal" /> Typography — Dashboard
+            </h4>
+            {themeLocked && <span className={lockedBadge}>disabled</span>}
+          </div>
+          <p className="text-ink-soft text-xs -mt-1">
+            Display + body fonts for this personal dashboard. Current:{' '}
+            <span className="text-ink font-semibold">{draft.fontDisplay}</span> + <span className="text-ink font-semibold">{draft.fontBody}</span>
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {FONT_PAIRS.map((f) => {
+              const sel = isPersonal && draft.fontDisplay === f.display && draft.fontBody === f.body
+              return (
+                <button
+                  key={f.id}
+                  type="button"
+                  disabled={themeLocked || saving}
+                  onClick={() => handleFont(f.display, f.body)}
+                  className={cn('p-3 rounded-xl border text-left disabled:cursor-not-allowed', sel ? selBtn : idleBtn)}
+                >
+                  <div className="font-bold text-ink text-sm" style={{ fontFamily: formatFontFamily(f.display) }}>{f.label}</div>
+                  <div className="text-[11px] text-ink-soft mt-0.5" style={{ fontFamily: formatFontFamily(f.body) }}>
+                    {f.display} + {f.body}
+                  </div>
                 </button>
               )
             })}

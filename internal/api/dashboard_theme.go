@@ -157,7 +157,7 @@ func extractThemeTokens(body map[string]any) map[string]any {
 	keys := []string{
 		"ink", "inkSoft", "mist", "mistDeep", "signal", "signalSoft", "alert",
 		"atmosphereMode", "colorScheme", "accent", "accent2",
-		"radius", "radiusSm", "radiusLg", "fontDisplay", "fontBody",
+		"radius", "radiusSm", "radiusLg", "fontDisplay", "fontBody", "packId",
 	}
 	out := map[string]any{}
 	for _, k := range keys {
