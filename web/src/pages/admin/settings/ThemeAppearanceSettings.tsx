@@ -96,7 +96,7 @@ export function ThemeAppearanceSettings() {
 
       {studio === 'brand' && (
         <div className="space-y-4">
-          <div className="rounded-xl border border-signal/25 bg-signal/5 p-2.5 text-xs flex items-center gap-2"><Store className="h-3.5 w-3.5 text-signal" /><span className="font-semibold text-ink">Brand Studio — Global</span><span className="text-ink-soft">Live Brand tokens · Following dashboards mirror Accent, Typography, and Radius.</span><span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-signal text-white">GLOBAL</span></div>
+          <div className="rounded-xl border border-signal/25 bg-signal/5 p-2.5 text-xs flex items-center gap-2"><Store className="h-3.5 w-3.5 text-signal" /><span className="font-semibold text-ink">Brand Studio — Global</span><span className="text-ink-soft">Public pages always · Dashboard only when Following Brand (Enable Custom keeps your personal look).</span><span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-signal text-white">GLOBAL</span></div>
           <div className="flex items-center gap-1 p-1 rounded-xl border border-line bg-surface-2 w-fit">
             {([
               { id: 'studio', label: 'Brand Tokens', icon: Sliders },

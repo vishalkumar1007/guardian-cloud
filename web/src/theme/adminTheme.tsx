@@ -100,7 +100,6 @@ type Ctx = {
   setAdminTheme: (t: ThemeTokens | null) => void
   handlePack: (id: string) => void
   handleScheme: (s: ColorScheme) => void
-  handleAtmosphere: (id: string) => void
   handleAccent: (accent: string, accent2?: string) => void
   clear: () => void
   isPersonal: boolean
@@ -222,11 +221,6 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
     void persistPersonal(n)
   }, [adminTheme, mode, persistPersonal])
 
-  const handleAtmosphere = useCallback((id: string) => {
-    const base: ThemeTokens = snapshotRef.current.theme ?? adminTheme ?? WATCHLINE_DEFAULTS
-    void persistPersonal({ ...base, atmosphereMode: id })
-  }, [adminTheme, persistPersonal])
-
   const handleAccent = useCallback((accent: string, accent2?: string) => {
     const base: ThemeTokens = snapshotRef.current.theme ?? adminTheme ?? WATCHLINE_DEFAULTS
     const n: ThemeTokens = {
@@ -254,7 +248,6 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
       setAdminTheme,
       handlePack,
       handleScheme,
-      handleAtmosphere,
       handleAccent,
       clear,
       isPersonal: mode === 'personal' && !!adminTheme,
@@ -270,7 +263,6 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
       setAdminTheme,
       handlePack,
       handleScheme,
-      handleAtmosphere,
       handleAccent,
       clear,
       refresh,

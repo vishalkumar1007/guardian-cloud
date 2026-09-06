@@ -284,8 +284,31 @@ export function dashboardShellOwnsTheme(): boolean {
   return document.documentElement.getAttribute('data-dashboard-shell') === '1'
 }
 
-/** Apply tokens to <html>. Pass force when the dashboard shell (or Brand live-edit) must win. */
-export function applyThemeTokens(tokens: ThemeTokens, opts?: { force?: boolean }) {
+/**
+ * When a super-admin has Enable Custom (personal dashboard theme), Brand Studio /
+ * platform theme paints must not overwrite the document — only the shell may apply.
+ */
+let personalDashboardOwnsTheme = false
+
+export function setPersonalDashboardOwnsTheme(owns: boolean) {
+  personalDashboardOwnsTheme = owns
+}
+
+export function personalDashboardOwnsThemeActive(): boolean {
+  return personalDashboardOwnsTheme
+}
+
+/**
+ * Apply tokens to <html>.
+ * - Without force: no-op while the dashboard shell owns the document.
+ * - With force: Brand live-edit / shell sync — blocked while personal dashboard owns theme
+ *   unless `allowWhilePersonal` (shell re-applying the personal effective theme).
+ */
+export function applyThemeTokens(
+  tokens: ThemeTokens,
+  opts?: { force?: boolean; allowWhilePersonal?: boolean },
+) {
+  if (personalDashboardOwnsTheme && !opts?.allowWhilePersonal) return
   if (!opts?.force && dashboardShellOwnsTheme()) return
   applyThemeTokensToElement(document.documentElement, tokens)
 }
@@ -336,7 +359,7 @@ export function applySchemeToThemePreserve(baseTheme: ThemeTokens, newScheme: Co
     mistDeep: modeDefaults.mistDeep,
     alert: modeDefaults.alert,
     atmosphereMode: keepAtmos,
-    signalSoft: isDark ? 'rgba(129,140,248,0.15)' : '#e0e7ff',
+    signalSoft: softAccent(accent, newScheme),
     accent,
     accent2,
     signal: accent,
@@ -360,7 +383,7 @@ export function themePackToTokens(p: ThemePack): ThemeTokens {
     accent: p.accent,
     accent2: p.accent2,
     signal: p.accent,
-    signalSoft: p.scheme === 'dark' ? 'rgba(129,140,248,0.15)' : '#e0e7ff',
+    signalSoft: softAccent(p.accent, p.scheme),
     fontDisplay: p.fontDisplay,
     fontBody: p.fontBody,
     radius: p.radius,

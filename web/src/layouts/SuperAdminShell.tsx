@@ -3,11 +3,23 @@ import { Outlet } from 'react-router-dom'
 import { SuperSidebar } from './components/SuperSidebar'
 import { SuperHeader } from './components/SuperHeader'
 import { CommandPalette } from './components/CommandPalette'
-import { useNavPrefs } from '../theme/navPrefs'
 import { useAdminTheme } from '../theme/adminTheme'
 import { useTheme } from '../theme/useTheme'
-import { themeTokensToCssVars, applyThemeTokensToElement, applyThemeTokens, setDashboardShellOwnsTheme } from '../theme/tokens'
+import { themeTokensToCssVars, applyThemeTokensToElement, applyThemeTokens, setDashboardShellOwnsTheme, setPersonalDashboardOwnsTheme } from '../theme/tokens'
 import { ensureSessionUserId } from '../theme/session'
+
+function applyRadiusCssVars(el: HTMLElement, radius: string, radiusSm: string, radiusLg: string) {
+  el.style.setProperty('--g-radius', radius)
+  el.style.setProperty('--g-radius-sm', radiusSm)
+  el.style.setProperty('--g-radius-lg', radiusLg)
+  el.style.setProperty('--radius', radius)
+  el.style.setProperty('--radius-sm', radiusSm)
+  el.style.setProperty('--radius-md', radius)
+  el.style.setProperty('--radius-lg', radius)
+  el.style.setProperty('--radius-xl', radiusLg)
+  el.style.setProperty('--radius-2xl', radiusLg)
+  el.style.setProperty('--radius-3xl', radiusLg)
+}
 
 export function SuperAdminShell() {
   const [collapsed, setCollapsed] = useState(false)
@@ -39,7 +51,6 @@ export function SuperAdminShell() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
-  const { prefs } = useNavPrefs()
   const { adminTheme, loading: adminThemeLoading, isPersonal } = useAdminTheme()
   const { theme: globalTheme } = useTheme()
   // While hydrating personal preference, follow Brand to avoid a flash of stale custom theme
@@ -48,27 +59,11 @@ export function SuperAdminShell() {
   const globalThemeRef = useRef(globalTheme)
   globalThemeRef.current = globalTheme
 
-  // Personal mode may override radius via nav prefs; Following Brand uses Brand radius only.
-  const shellStyle = useMemo(() => {
-    const vars = themeTokensToCssVars(effective)
-    if (!isPersonal) return vars as React.CSSProperties
-    const radius = prefs.adminRadius
-    const radiusSm = prefs.adminRadiusSm
-    const radiusLg = prefs.adminRadiusLg
-    return {
-      ...vars,
-      ['--g-radius']: radius,
-      ['--g-radius-sm']: radiusSm,
-      ['--g-radius-lg']: radiusLg,
-      ['--radius']: radius,
-      ['--radius-sm']: radiusSm,
-      ['--radius-md']: radius,
-      ['--radius-lg']: radius,
-      ['--radius-xl']: radiusLg,
-      ['--radius-2xl']: radiusLg,
-      ['--radius-3xl']: radiusLg,
-    } as React.CSSProperties
-  }, [isPersonal, prefs.adminRadius, prefs.adminRadiusSm, prefs.adminRadiusLg, effective])
+  // Personal Radius / packs write radius onto adminTheme — that is the shell source of truth.
+  const shellStyle = useMemo(
+    () => themeTokensToCssVars(effective) as React.CSSProperties,
+    [effective],
+  )
 
   const dataTheme = effective.colorScheme
   const dataAtmos = effective.atmosphereMode || (dataTheme === 'dark' ? 'void' : 'mist')
@@ -77,33 +72,26 @@ export function SuperAdminShell() {
   useEffect(() => {
     setDashboardShellOwnsTheme(true)
     return () => {
+      setPersonalDashboardOwnsTheme(false)
       setDashboardShellOwnsTheme(false)
       applyThemeTokens(globalThemeRef.current, { force: true })
     }
   }, [])
 
-  // Keep shell + document tokens in sync with Following Brand / personal effective theme.
+  // Personal custom theme: Brand Studio must not paint over the dashboard document.
   useEffect(() => {
-    applyThemeTokens(effective, { force: true })
+    setPersonalDashboardOwnsTheme(isPersonal)
+    return () => setPersonalDashboardOwnsTheme(false)
+  }, [isPersonal])
+
+  // Keep shell + document tokens in sync (radius included via effective / Personal Radius).
+  useEffect(() => {
+    applyThemeTokens(effective, { force: true, allowWhilePersonal: true })
     const el = shellRef.current
-    if (!el) return
-    applyThemeTokensToElement(el, effective)
-    if (isPersonal) {
-      const radius = prefs.adminRadius
-      const radiusSm = prefs.adminRadiusSm
-      const radiusLg = prefs.adminRadiusLg
-      el.style.setProperty('--g-radius', radius)
-      el.style.setProperty('--g-radius-sm', radiusSm)
-      el.style.setProperty('--g-radius-lg', radiusLg)
-      el.style.setProperty('--radius', radius)
-      el.style.setProperty('--radius-sm', radiusSm)
-      el.style.setProperty('--radius-md', radius)
-      el.style.setProperty('--radius-lg', radius)
-      el.style.setProperty('--radius-xl', radiusLg)
-      el.style.setProperty('--radius-2xl', radiusLg)
-      el.style.setProperty('--radius-3xl', radiusLg)
-    }
-  }, [effective, isPersonal, prefs.adminRadius, prefs.adminRadiusSm, prefs.adminRadiusLg])
+    if (el) applyThemeTokensToElement(el, effective)
+    applyRadiusCssVars(document.documentElement, effective.radius, effective.radiusSm, effective.radiusLg)
+    if (el) applyRadiusCssVars(el, effective.radius, effective.radiusSm, effective.radiusLg)
+  }, [effective, isPersonal, globalTheme, effective.radius, effective.radiusSm, effective.radiusLg])
 
   return (
     <div
@@ -139,7 +127,7 @@ export function SuperAdminShell() {
         </div>
       )}
 
-      <div className="relative z-10 flex flex-1 flex-col min-w-0 h-screen overflow-hidden bg-transparent" data-theme={dataTheme} data-atmosphere={dataAtmos}>
+      <div className="relative z-10 flex flex-1 flex-col min-w-0 h-screen overflow-hidden bg-transparent">
         <SuperHeader
           onOpenMobileMenu={() => setMobileOpen(true)}
           onOpenCommandPalette={() => setCmdPaletteOpen(true)}

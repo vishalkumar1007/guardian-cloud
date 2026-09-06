@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { useTheme } from '../../theme/useTheme'
 import { useNavPrefs } from '../../theme/navPrefs'
+import { useAdminTheme } from '../../theme/adminTheme'
 import { NotificationCenter } from './NotificationCenter'
 import { cn } from '../../lib/utils'
 
@@ -25,15 +26,26 @@ export function SuperHeader({ onOpenMobileMenu, onOpenCommandPalette }: SuperHea
   const location = useLocation()
   const navigate = useNavigate()
   const { theme, toggleColorMode } = useTheme()
+  const { adminTheme, isPersonal, handleScheme } = useAdminTheme()
   const { prefs } = useNavPrefs()
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
 
   const pathSegments = location.pathname.split('/').filter(Boolean)
+  // Custom dashboard uses personal tokens; Following Brand uses global Brand tokens.
+  const activeScheme = (isPersonal && adminTheme ? adminTheme.colorScheme : theme.colorScheme) === 'dark' ? 'dark' : 'light'
 
   function handleSignOut() {
     localStorage.removeItem('super_admin_session')
     navigate('/super/login')
+  }
+
+  function handleThemeToggle() {
+    if (isPersonal) {
+      handleScheme(activeScheme === 'dark' ? 'light' : 'dark')
+      return
+    }
+    toggleColorMode()
   }
 
   const heightClass = prefs.topHeight === '56' ? 'h-14' : 'h-16'
@@ -127,12 +139,12 @@ export function SuperHeader({ onOpenMobileMenu, onOpenCommandPalette }: SuperHea
 
         {prefs.showThemeToggle && <button
           type="button"
-          onClick={toggleColorMode}
+          onClick={handleThemeToggle}
           className="flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-surface text-ink-soft hover:text-ink hover:border-line transition-colors"
-          title={`Switch to ${theme.colorScheme === 'dark' ? 'light' : 'dark'} mode`}
-          aria-label={`Switch to ${theme.colorScheme === 'dark' ? 'light' : 'dark'} mode`}
+          title={`Switch to ${activeScheme === 'dark' ? 'light' : 'dark'} mode`}
+          aria-label={`Switch to ${activeScheme === 'dark' ? 'light' : 'dark'} mode`}
         >
-          {theme.colorScheme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          {activeScheme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </button>}
 
         <div className="relative">

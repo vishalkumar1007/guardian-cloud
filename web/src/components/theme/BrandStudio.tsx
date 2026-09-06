@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react'
 import { Palette, Sparkles, Type, BoxSelect } from 'lucide-react'
 import { ACCENT_PRESETS, FONT_PAIRS, RADIUS_PRESETS, themeTokensToCssVars, formatFontFamily, type ThemeTokens } from '../../theme/tokens'
+import { useAdminTheme } from '../../theme/adminTheme'
 import { cn } from '../../lib/utils'
 
 export function BrandStudio({ draft, onAccent, onFont, onRadius, customAccent, onCustomAccent }: {
@@ -11,17 +12,20 @@ export function BrandStudio({ draft, onAccent, onFont, onRadius, customAccent, o
   customAccent: string
   onCustomAccent: (v: string) => void
 }) {
-  // Live-preview Brand tokens inside the studio so selections visibly drive this panel.
+  const { isPersonal } = useAdminTheme()
+  // Only paint Brand tokens onto this panel when Following Brand. In Enable Custom,
+  // inheritable --g-radius / fonts would restyle dashboard chrome under .g-dashboard-shell.
   const liveStyle = useMemo(() => {
+    if (isPersonal) return undefined
     const vars = themeTokensToCssVars(draft)
     return {
       ...vars,
       fontFamily: formatFontFamily(draft.fontBody),
     } as React.CSSProperties
-  }, [draft])
+  }, [draft, isPersonal])
 
   return (
-    <div className="space-y-6 brand-studio-live" style={liveStyle}>
+    <div className={cn('space-y-6', !isPersonal && 'brand-studio-live')} style={liveStyle}>
       <div className="rounded-2xl border border-signal/25 bg-signal/5 p-4 flex items-start gap-3">
         <div className="h-9 w-9 rounded-xl bg-signal/10 border border-signal/20 flex items-center justify-center shrink-0">
           <Sparkles className="h-4 w-4 text-signal" />
@@ -29,8 +33,10 @@ export function BrandStudio({ draft, onAccent, onFont, onRadius, customAccent, o
         <div className="flex-1 min-w-0">
           <h3 className="font-display text-sm font-bold text-ink">Brand Studio — Global</h3>
           <p className="text-ink-soft text-xs mt-0.5">
-            Accent · Typography · Radius apply live to public pages and any dashboard <b className="text-ink">Following Brand</b>.
-            This panel uses your current Brand tokens as a live preview.
+            Accent · Typography · Radius apply to public pages and dashboards <b className="text-ink">Following Brand</b>.
+            {isPersonal
+              ? ' Your dashboard stays on Enable Custom — Brand edits do not restyle this shell.'
+              : ' This panel live-previews Brand tokens while Following.'}
           </p>
         </div>
         <span className="text-[10px] px-2 py-1 rounded-full bg-signal text-white shrink-0">GLOBAL</span>

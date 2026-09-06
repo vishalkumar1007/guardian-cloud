@@ -88,6 +88,7 @@ function getAuthHeaders(): Record<string, string> {
   return getSuperAdminAuthHeaders()
 }
 let memoryPrefs: NavPrefs | null = null
+let prefsWriteGen = 0
 function read(): NavPrefs {
   if (NAV_DB_ONLY) return memoryPrefs ? { ...DEFAULTS, ...memoryPrefs } as NavPrefs : { ...DEFAULTS }
   try {
@@ -100,6 +101,7 @@ function read(): NavPrefs {
   } catch { return { ...DEFAULTS } }
 }
 function write(p: NavPrefs) {
+  prefsWriteGen += 1
   memoryPrefs = { ...p }
   if (!NAV_DB_ONLY) {
     try {
@@ -136,12 +138,15 @@ export function NavPrefsProvider({ children }: { children: React.ReactNode }) {
   const [prefs, setPrefsState] = useState<NavPrefs>(() => read())
   useEffect(() => {
     ;(async () => {
+      const genAtStart = prefsWriteGen
       try {
         const headers: Record<string, string> = { ...getAuthHeaders() }
         const [navRes, adminRes] = await Promise.all([
           fetch(`${apiBase()}/api/v1/admin/settings/navigation?scope=personal`, { headers }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
           fetch(`${apiBase()}/api/v1/admin/settings/admin_studio?scope=personal`, { headers }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
         ])
+        // Don't clobber Personal Radius / local edits made while the fetch was in flight.
+        if (genAtStart !== prefsWriteGen) return
         let base = read()
         if (navRes && Object.keys(navRes).length) {
           base = { ...base, ...navRes, favorites: Array.isArray((navRes as any).favorites) ? (navRes as any).favorites : base.favorites, hiddenSections: Array.isArray((navRes as any).hiddenSections) ? (navRes as any).hiddenSections : base.hiddenSections }
@@ -149,6 +154,7 @@ export function NavPrefsProvider({ children }: { children: React.ReactNode }) {
         if (adminRes && Object.keys(adminRes).length) {
           base = { ...base, ...adminRes }
         }
+        if (genAtStart !== prefsWriteGen) return
         if (navRes && Object.keys(navRes).length || adminRes && Object.keys(adminRes).length) {
           memoryPrefs = { ...base }
           if (!NAV_DB_ONLY) {

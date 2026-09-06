@@ -217,7 +217,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const applyLocal = useCallback((tokens: ThemeTokens, version?: number) => {
-    // Force so Brand Studio edits paint immediately even while dashboard shell owns theme.
+    // Force so Brand Studio edits paint when Following Brand (dashboard owns doc).
+    // No-op on document while Enable Custom — personalDashboardOwnsTheme blocks Brand paints.
     applyThemeTokens(tokens, { force: true })
     persistTheme(tokens)
     if (!THEME_DB_ONLY) {

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { LayoutPanelLeft, Sparkles, Check, Info, Monitor, Moon, Sun, Layers, Image as ImageIcon, Palette, RefreshCw, AlertCircle } from 'lucide-react'
+import { LayoutPanelLeft, Sparkles, Check, Info, Monitor, Moon, Sun, Layers, Palette, RefreshCw, AlertCircle } from 'lucide-react'
 import { useNavPrefs } from '../../theme/navPrefs'
 import { RADIUS_PRESETS, ACCENT_PRESETS, THEME_PACKS, ATMOSPHERE_PRESETS, themePackToTokens, applySchemeToThemePreserve, softAccent, type ColorScheme, type ThemeTokens } from '../../theme/tokens'
 import { useTheme } from '../../theme/useTheme'
@@ -7,12 +7,21 @@ import { useAdminTheme } from '../../theme/adminTheme'
 import { cn } from '../../lib/utils'
 import { NavCustomizer } from './NavCustomizer'
 
-const ADMIN_ATMOS = ['void', 'obsidian', 'aurora', 'grid', 'snow', 'mesh', 'starfield', 'mist', 'daylight', 'paper', 'frost', 'sunrise', 'lagoon', 'blush'] as const
-
 const selBtn = 'border-signal bg-signal/10 ring-1 ring-signal/30'
 const idleBtn = 'border-line bg-surface-2 hover:border-signal/40'
 const badge = 'text-[10px] px-2 py-0.5 rounded-full bg-signal/10 text-signal border border-signal/20'
 const lockedBadge = 'text-[10px] px-2 py-0.5 rounded-full border border-line bg-surface-2 text-ink-soft'
+
+function isPackActive(draft: ThemeTokens, p: (typeof THEME_PACKS)[number]) {
+  // Scheme is toggled independently (top nav / Color Scheme) — pack match ignores light/dark.
+  return (
+    draft.accent.toLowerCase() === p.accent.toLowerCase() &&
+    draft.atmosphereMode === p.atmosphere &&
+    draft.fontDisplay === p.fontDisplay &&
+    draft.fontBody === p.fontBody &&
+    draft.radius === p.radius
+  )
+}
 
 export function AdminStudio() {
   const { prefs, setPrefs } = useNavPrefs()
@@ -23,21 +32,33 @@ export function AdminStudio() {
   const filteredPacks = useMemo(() => filter === 'all' ? THEME_PACKS : THEME_PACKS.filter(p => p.scheme === filter), [filter])
   const themeLocked = !isPersonal
 
+  function applyPack(p: (typeof THEME_PACKS)[number]) {
+    const tokens = themePackToTokens(p)
+    setPrefs({ adminRadius: p.radius, adminRadiusSm: p.radiusSm, adminRadiusLg: p.radiusLg })
+    setAdminTheme(tokens)
+  }
+
+  function handlePersonalRadius(r: (typeof RADIUS_PRESETS)[number]) {
+    if (themeLocked) return
+    // Persist on personal theme tokens (drives shell CSS vars) and keep prefs label in sync.
+    setPrefs({ adminRadius: r.md, adminRadiusSm: r.sm, adminRadiusLg: r.lg })
+    setAdminTheme({ ...draft, radius: r.md, radiusSm: r.sm, radiusLg: r.lg })
+  }
+
   function handlePack(id: string) {
     if (themeLocked) return
-    const p = THEME_PACKS.find(x => x.id === id); if (!p) return
-    setAdminTheme(themePackToTokens(p))
+    const p = THEME_PACKS.find(x => x.id === id)
+    if (!p) return
+    applyPack(p)
   }
+
   function handleScheme(s: ColorScheme) {
     if (themeLocked) return
     const base: ThemeTokens = draft
     if (s === base.colorScheme) return
     setAdminTheme(applySchemeToThemePreserve(base, s))
   }
-  function handleAtmosphere(id: string) {
-    if (themeLocked) return
-    setAdminTheme({ ...draft, atmosphereMode: id })
-  }
+
   function handleAccent(accent: string, accent2?: string) {
     if (themeLocked) return
     setAdminTheme({
@@ -104,7 +125,7 @@ export function AdminStudio() {
             disabled={saving}
             onClick={() => {
               const defaultPack = THEME_PACKS.find(p => p.id === 'void-defense') || THEME_PACKS[0]
-              setAdminTheme(themePackToTokens(defaultPack))
+              applyPack(defaultPack)
             }}
             className="shrink-0 px-3.5 py-2 rounded-xl border border-signal bg-signal/10 hover:bg-signal/20 disabled:opacity-60 text-signal text-xs font-semibold flex items-center gap-1.5"
           >
@@ -128,7 +149,7 @@ export function AdminStudio() {
         <Info className="h-3.5 w-3.5 text-signal shrink-0" />
         <span className="text-ink-soft">
           {isPersonal
-            ? <>Public routes stay on Brand Studio. Personal dashboard options save per super-admin in DB.</>
+            ? <>Public routes stay on Brand Studio. Personal dashboard options save per super-admin in DB. Curated Packs set scheme, accent, fonts, radius, and atmosphere together.</>
             : <>Following Brand — Theme & Customized is disabled. Enable Custom to edit.</>}
         </span>
       </div>
@@ -166,9 +187,12 @@ export function AdminStudio() {
               ))}
             </div>
           </div>
+          <p className="text-ink-soft text-xs -mt-1">
+            Each pack updates dashboard scheme, accent, typography, radius, and atmosphere in one click.
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {filteredPacks.map(p => {
-              const active = isPersonal && draft.accent.toLowerCase() === p.accent.toLowerCase() && draft.colorScheme === p.scheme && draft.atmosphereMode === p.atmosphere
+              const active = isPersonal && isPackActive(draft, p)
               const atmos = ATMOSPHERE_PRESETS.find(a => a.id === p.atmosphere)
               return (
                 <button
@@ -192,6 +216,7 @@ export function AdminStudio() {
                     <div className="min-w-0 flex-1">
                       <div className="font-semibold text-ink text-sm truncate">{p.label}</div>
                       <div className="text-[11px] text-ink-soft truncate">{p.description}</div>
+                      <div className="text-[10px] text-ink-soft mt-0.5 font-mono truncate">{p.fontDisplay} · {p.radius}</div>
                     </div>
                   </div>
                 </button>
@@ -224,40 +249,6 @@ export function AdminStudio() {
                 {isPersonal && draft.colorScheme === s && <Check className="h-4 w-4 text-signal ml-auto" />}
               </button>
             ))}
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-line bg-surface p-5 space-y-4">
-          <div className="flex items-center gap-2">
-            <h4 className="font-display text-sm font-bold text-ink flex items-center gap-2">
-              <ImageIcon className="h-4 w-4 text-signal" /> Background Atmosphere — Dashboard
-            </h4>
-            <span className={badge}>scoped</span>
-            {themeLocked && <span className={lockedBadge}>disabled</span>}
-            <span className="ml-auto text-[11px] text-ink-soft">dashboard shell only</span>
-          </div>
-          <p className="text-ink-soft text-xs -mt-1">Presets update <code className="text-signal">data-atmosphere</code> on the dashboard shell.</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-            {ADMIN_ATMOS.map(id => {
-              const a = ATMOSPHERE_PRESETS.find(x => x.id === id); if (!a) return null
-              const active = isPersonal && draft.atmosphereMode === id
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  disabled={themeLocked || saving}
-                  onClick={() => handleAtmosphere(id)}
-                  className={cn('rounded-xl border overflow-hidden text-left disabled:cursor-not-allowed', active ? selBtn : 'border-line hover:border-signal/30')}
-                >
-                  <div className="h-12 border-b border-line" style={{ background: a.bg }} />
-                  <div className="p-2 bg-surface flex items-center justify-between gap-1">
-                    <span className="text-xs font-semibold text-ink capitalize truncate">{a.label}</span>
-                    {active && <Check className="h-3.5 w-3.5 text-signal shrink-0" />}
-                  </div>
-                  <div className="px-2 pb-2 text-[10px] text-ink-soft truncate">{a.desc}</div>
-                </button>
-              )
-            })}
           </div>
         </div>
 
@@ -298,19 +289,16 @@ export function AdminStudio() {
             </h4>
             {themeLocked && <span className={lockedBadge}>disabled</span>}
           </div>
-          <p className="text-ink-soft text-xs -mt-1">Only while Custom is enabled. When Following Brand, use Brand Studio → Radius & Density.</p>
+          <p className="text-ink-soft text-xs -mt-1">Only while Custom is enabled. Packs also set radius; adjust here to override.</p>
           <div className="grid grid-cols-5 gap-2">
             {RADIUS_PRESETS.map(r => {
-              const active = !themeLocked && (prefs.adminRadius === r.md || draft.radius === r.md)
+              const active = !themeLocked && (draft.radius === r.md || prefs.adminRadius === r.md)
               return (
                 <button
                   key={r.id}
                   type="button"
                   disabled={themeLocked}
-                  onClick={() => {
-                    setPrefs({ adminRadius: r.md, adminRadiusSm: r.sm, adminRadiusLg: r.lg })
-                    if (isPersonal) setAdminTheme({ ...draft, radius: r.md, radiusSm: r.sm, radiusLg: r.lg })
-                  }}
+                  onClick={() => handlePersonalRadius(r)}
                   className={cn('p-2 rounded-xl border text-center disabled:cursor-not-allowed', active ? selBtn : idleBtn)}
                 >
                   <div className="h-6 w-8 mx-auto border-2 border-signal/40 bg-signal/10" style={{ borderRadius: r.md }} />
@@ -322,7 +310,7 @@ export function AdminStudio() {
             })}
           </div>
           <div className="text-[11px] text-ink-soft">
-            Current: <span className="text-ink font-mono">{prefs.adminRadius}</span>
+            Current: <span className="text-ink font-mono">{draft.radius}</span>
           </div>
         </div>
 

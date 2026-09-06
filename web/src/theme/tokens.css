@@ -1,5 +1,8 @@
+/* Defaults only on document / dashboard shell — never on nested [data-theme] wrappers
+   (those would reset --g-radius / accent and block Personal Radius + packs). */
 :root,
-[data-theme="light"] {
+html[data-theme="light"],
+.g-dashboard-shell[data-theme="light"] {
   --g-ink: #0f172a;
   --g-ink-soft: #475569;
   --g-mist: #f6f7fb;
@@ -36,7 +39,8 @@
   --radius-lg: 22px;
 }
 
-[data-theme="dark"] {
+html[data-theme="dark"],
+.g-dashboard-shell[data-theme="dark"] {
   --g-ink: #f1f5f9;
   --g-ink-soft: #a2acc4;
   --g-mist: #0a0b14;
@@ -293,6 +297,13 @@ html[data-atmosphere="blush"] .g-atmosphere,
 .g-dashboard-shell .rounded-3xl {
   border-radius: var(--g-radius-lg) !important;
 }
+.g-dashboard-shell .rounded-full {
+  border-radius: 9999px !important;
+}
+.g-dashboard-shell .g-card,
+.g-dashboard-shell [class*="rounded-["]:not([class*="rounded-full"]) {
+  border-radius: var(--g-radius) !important;
+}
 
 .brand-studio-live {
   font-family: var(--g-font-body);
@@ -300,11 +311,7 @@ html[data-atmosphere="blush"] .g-atmosphere,
 .brand-studio-live .font-display {
   font-family: var(--g-font-display) !important;
 }
-.g-dashboard-shell.g-atmosphere,
-.g-dashboard-shell[data-atmosphere].g-atmosphere,
-html[data-atmosphere] .g-dashboard-shell.g-atmosphere {
-  background: linear-gradient(180deg, var(--g-mist) 0%, var(--g-mist-deep) 55%, var(--g-mist) 100%) !important;
-}
+/* Light Brand/pack accent wash at top — does not replace data-atmosphere backgrounds */
 .g-dashboard-shell::after {
   content: "";
   pointer-events: none;
@@ -329,7 +336,7 @@ html[data-atmosphere] .g-dashboard-shell.g-atmosphere {
   );
 }
 .g-dashboard-shell.g-atmosphere::before {
-  /* Keep grain subtle; top wash carries Brand color */
+  /* Keep grain subtle; atmosphere + top wash carry look */
   opacity: 0.02;
   position: absolute;
   z-index: 0;
