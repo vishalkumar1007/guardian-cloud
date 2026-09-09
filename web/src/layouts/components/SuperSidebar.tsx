@@ -20,6 +20,7 @@ import {
 import { GuardianMark } from '../../components/GuardianMark'
 import { cn } from '../../lib/utils'
 import { useNavPrefs } from '../../theme/navPrefs'
+import { useAuth } from '../../auth/AuthProvider'
 import { Star } from 'lucide-react'
 
 interface SuperSidebarProps {
@@ -227,9 +228,19 @@ function buildSectionKey(sectionId: string, label: string) {
   return `${sectionId}::${label}`
 }
 
+/** Two-letter monogram for the sidebar avatar. */
+function sidebarInitials(name: string): string {
+  const parts = name.trim().split(/[\s@.]+/).filter(Boolean)
+  if (parts.length === 0) return 'G'
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return (parts[0][0] + parts[1][0]).toUpperCase()
+}
+
 export function SuperSidebar({ collapsed, onToggleCollapse, onMobileClose }: SuperSidebarProps) {
   const location = useLocation()
   const { prefs } = useNavPrefs()
+  const { user } = useAuth()
+  const signedInName = user?.display_name || user?.email || 'Guardian staff'
   const widthMap: Record<string, string> = { '220': 'w-[220px]', '240': 'w-[240px]', '270': 'w-[270px]', '300': 'w-[300px]', '320': 'w-[320px]' }
   const collapsedMap: Record<string, string> = { '56': 'w-[56px]', '68': 'w-[68px]', '80': 'w-[80px]' }
   const widthClass = widthMap[prefs.width] || 'w-[270px]'
@@ -449,12 +460,12 @@ export function SuperSidebar({ collapsed, onToggleCollapse, onMobileClose }: Sup
       {prefs.showFooterUser && <div className="border-t border-line p-2.5 bg-surface/90 backdrop-blur-xl">
         <div className={cn('flex items-center gap-2.5 rounded-xl border border-line bg-surface-2 p-2', collapsed && 'justify-center')}>
           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-signal/20 text-signal font-mono text-xs font-bold border border-signal/30">
-            AV
+            {sidebarInitials(signedInName)}
           </div>
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <span className="block truncate font-sans text-xs font-semibold text-ink leading-none">Alexander Vance</span>
-              <span className="block truncate font-mono text-[10px] text-ink-soft mt-1">SUPER_ADMIN</span>
+              <span className="block truncate font-sans text-xs font-semibold text-ink leading-none">{signedInName}</span>
+              <span className="block truncate font-mono text-[10px] text-ink-soft mt-1">{user?.roles?.[0]?.key ?? 'GUARDIAN STAFF'}</span>
             </div>
           )}
         </div>

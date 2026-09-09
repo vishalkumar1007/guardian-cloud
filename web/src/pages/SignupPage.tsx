@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { User, AtSign, Lock, Eye, EyeOff, ArrowRight, Check } from 'lucide-react'
 import { Button } from '../components/ui/button'
@@ -7,14 +7,30 @@ import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { GuardianMark } from '../components/GuardianMark'
 import { SentinelMeshBg } from '../components/home/SentinelMeshBg'
+import { useAuth } from '../auth/AuthProvider'
+import { AuthBoundary } from '../auth/AuthBoundary'
+import { SSOButtons } from '../auth/SSOButtons'
+import { ApiError, api } from '../lib/apiClient'
 
+/** Customer registration. */
 export function SignupPage() {
+  return (
+    <AuthBoundary>
+      <SignupForm />
+    </AuthBoundary>
+  )
+}
+
+function SignupForm() {
+  const { user } = useAuth()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  const [isError, setIsError] = useState(false)
+  const [sent, setSent] = useState(false)
 
   // Real-time password criteria evaluation
   const hasMinLength = password.length >= 10
@@ -24,29 +40,52 @@ export function SignupPage() {
 
   const strengthScore = [hasMinLength, hasUpperLower, hasNumber, hasSymbol].filter(Boolean).length
 
-  function onSubmit(e: FormEvent) {
+  function fail(message: string) {
+    setNotice(message)
+    setIsError(true)
+  }
+
+  async function onSubmit(e: FormEvent) {
     e.preventDefault()
     if (!name.trim()) {
-      setNotice('Please enter your name.')
+      fail('Please enter your name.')
       return
     }
     if (!email || !email.includes('@')) {
-      setNotice('Please enter a valid email address.')
+      fail('Please enter a valid email address.')
       return
     }
     if (password.length < 10) {
-      setNotice('Password must be at least 10 characters.')
+      fail('Password must be at least 10 characters.')
       return
     }
 
     setIsSubmitting(true)
     setNotice(null)
+    setIsError(false)
 
-    setTimeout(() => {
+    try {
+      await api.post(
+        '/api/v1/auth/signup',
+        { email: email.trim(), password, display_name: name.trim() },
+        { plane: 'customer' },
+      )
+      // The API answers identically whether or not the address is already
+      // registered, so this page must too — anything else would reveal which
+      // emails have accounts.
+      setSent(true)
+    } catch (err) {
+      fail(
+        err instanceof ApiError
+          ? err.message
+          : 'Could not reach Guardian. Check your connection and try again.',
+      )
+    } finally {
       setIsSubmitting(false)
-      setNotice('Account ready for atomic tenant provisioning.')
-    }, 600)
+    }
   }
+
+  if (user) return <Navigate to="/app" replace />
 
   return (
     <div className="relative h-[100dvh] w-screen overflow-hidden bg-mist">
@@ -148,6 +187,24 @@ export function SignupPage() {
                 </p>
               </div>
 
+              {sent ? (
+                <div className="space-y-4 text-left">
+                  <div className="rounded-xl border border-signal/30 bg-signal-soft/20 px-4 py-3">
+                    <p className="text-sm font-semibold text-ink">Check your email</p>
+                    <p className="mt-1 text-xs leading-relaxed text-ink-soft">
+                      We've sent a confirmation link to{' '}
+                      <span className="font-medium text-ink">{email.trim()}</span>. Open it to finish
+                      setting up your account.
+                    </p>
+                  </div>
+                  <Link
+                    to="/login"
+                    className="inline-flex w-full items-center justify-center rounded-xl bg-signal py-3 text-sm font-semibold text-mist-deep no-underline shadow-sm"
+                  >
+                    Continue to sign in
+                  </Link>
+                </div>
+              ) : (
               <form onSubmit={onSubmit} className="space-y-3.5 text-left">
                 {/* Name */}
                 <div className="space-y-1">
@@ -275,12 +332,21 @@ export function SignupPage() {
                   )}
                 </Button>
               </form>
+              )}
 
               {notice && (
-                <div className="rounded-xl border border-signal/30 bg-signal-soft/20 px-3 py-2 text-xs text-ink">
+                <div
+                  className={
+                    isError
+                      ? 'rounded-xl border border-alert/30 bg-alert/5 px-3 py-2 text-xs text-alert'
+                      : 'rounded-xl border border-signal/30 bg-signal-soft/20 px-3 py-2 text-xs text-ink'
+                  }
+                >
                   {notice}
                 </div>
               )}
+
+              <SSOButtons plane="customer" redirectAfter="/app" dividerLabel="or" />
 
               <p className="text-center text-xs text-ink-soft pt-1">
                 Already have an account?{' '}

@@ -1,112 +1,37 @@
-/** Shared super-admin session helpers for personal settings APIs. */
+/**
+ * Compatibility shims for the per-user settings APIs.
+ *
+ * These used to fabricate a super-admin session in localStorage and identify the
+ * caller with an `X-User-Id` header the server simply trusted. Authentication is
+ * now a real httpOnly session cookie (see auth/AuthProvider), so identity is
+ * established by the browser attaching that cookie and these helpers no longer
+ * carry any.
+ *
+ * They remain as no-ops purely so the theme and navigation modules keep their
+ * current shape; they go away with the rest of the legacy path once
+ * AUTH_LEGACY_MODE is switched off server-side.
+ */
 
-export const SEEDED_SUPERADMIN_UUID = '00000000-0000-4000-8000-0000000000bb'
 const SESSION_KEY = 'super_admin_session'
 
-const DEMO_EMAILS = new Set([
-  'superadmin@guardian.local',
-  'alexander.vance@guardian.internal',
-])
-
-function isUuid(s: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s)
-}
-
-function newUuid(): string {
-  try {
-    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-      return crypto.randomUUID()
-    }
-  } catch {}
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0
-    const v = c === 'x' ? r : (r & 0x3) | 0x8
-    return v.toString(16)
-  })
-}
-
-export type SuperAdminSession = {
-  id: string
-  email?: string
-  role?: string
-  name?: string
-  at?: number
-  rememberMe?: boolean
-  tenantId?: string
-  tenant_id?: string
-}
-
-/** Resolve API user id from session id (maps demo-session → seeded UUID). */
-export function resolveApiUserId(sessionId: string | null | undefined): string | null {
-  if (!sessionId) return null
-  if (sessionId === 'demo-session') return SEEDED_SUPERADMIN_UUID
-  if (isUuid(sessionId)) return sessionId
-  return null
-}
-
 /**
- * Ensure super_admin_session always has a stable UUID id.
- * Patches existing sessions that only stored email.
+ * Previously created a fake session when none existed. Now it only clears any
+ * stale object left over from before the cutover, so nothing downstream reads a
+ * user id that the server would not agree with.
  */
 export function ensureSessionUserId(): string {
   try {
-    const raw = localStorage.getItem(SESSION_KEY)
-    if (raw) {
-      const s = JSON.parse(raw) as SuperAdminSession
-      const mapped = resolveApiUserId(s?.id ? String(s.id) : null)
-      if (mapped) return mapped
-
-      // Session exists but id missing/invalid — assign stable id and persist
-      const email = s?.email ? String(s.email).toLowerCase() : ''
-      const id =
-        DEMO_EMAILS.has(email) || !email
-          ? 'demo-session'
-          : newUuid()
-      const next = { ...s, id }
-      localStorage.setItem(SESSION_KEY, JSON.stringify(next))
-      return resolveApiUserId(id) || SEEDED_SUPERADMIN_UUID
-    }
-  } catch {}
-
-  try {
-    localStorage.setItem(
-      SESSION_KEY,
-      JSON.stringify({
-        id: 'demo-session',
-        email: 'alexander.vance@guardian.internal',
-        role: 'SUPER_ADMIN',
-        name: 'Alexander Vance',
-      }),
-    )
-  } catch {}
-  return SEEDED_SUPERADMIN_UUID
-}
-
-/** Build auth headers for personal admin APIs. */
-export function getSuperAdminAuthHeaders(): Record<string, string> {
-  const h: Record<string, string> = {}
-  try {
-    const uid = ensureSessionUserId()
-    if (uid) h['X-User-Id'] = uid
-    const raw = localStorage.getItem(SESSION_KEY)
-    if (raw) {
-      const s = JSON.parse(raw) as SuperAdminSession
-      if (s?.tenantId || s?.tenant_id) h['X-Tenant-Id'] = String(s.tenantId || s.tenant_id)
-      if (s?.email) h['X-User-Email'] = String(s.email)
-    }
-  } catch {}
-  return h
-}
-
-/** Build session payload for login (stable id per email). */
-export function buildLoginSession(email: string, rememberMe: boolean): SuperAdminSession {
-  const normalized = email.trim().toLowerCase()
-  const id = DEMO_EMAILS.has(normalized) ? 'demo-session' : newUuid()
-  return {
-    id,
-    email: email.trim(),
-    role: 'SUPER_ADMIN',
-    at: Date.now(),
-    rememberMe,
+    localStorage.removeItem(SESSION_KEY)
+  } catch {
+    // Private browsing or blocked storage; nothing to clean up.
   }
+  return ''
+}
+
+/**
+ * No headers are needed any more: the session travels as an httpOnly cookie,
+ * which requests must send with `credentials: 'include'`.
+ */
+export function getSuperAdminAuthHeaders(): Record<string, string> {
+  return {}
 }

@@ -540,7 +540,7 @@ export const DARK_DEFAULTS: ThemeTokens = {
 
 export const WATCHLINE_DEFAULTS = DARK_DEFAULTS
 
-export const TOKEN_CSS_VARS: Record<Exclude<keyof ThemeTokens, 'colorScheme'>, string> = {
+export const TOKEN_CSS_VARS: Record<Exclude<keyof ThemeTokens, 'colorScheme' | 'packId'>, string> = {
   ink: '--g-ink',
   inkSoft: '--g-ink-soft',
   mist: '--g-mist',

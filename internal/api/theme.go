@@ -209,14 +209,26 @@ func errInvalidColor(name string) error {
 	return colorError("invalid hex color for " + name)
 }
 
+// platformAuthorized gates platform-wide writes.
+//
+// A real staff session is sufficient. The shared dev token below it is the
+// pre-session fallback, gated by AUTH_LEGACY_MODE and removed once the frontend
+// has migrated — see legacy.go.
 func platformAuthorized(r *http.Request) bool {
+	if _, ok := adminPrincipalID(r); ok {
+		return true
+	}
+	if !legacyFallbackAllowed(r, "platformAuthorized") {
+		return false
+	}
+
 	expected := os.Getenv("GUARDIAN_PLATFORM_DEV_TOKEN")
 	if expected == "" {
 		expected = "guardian-dev-super-admin"
 	}
-	auth := r.Header.Get("Authorization")
-	if strings.HasPrefix(auth, "Bearer ") {
-		return strings.TrimPrefix(auth, "Bearer ") == expected
+	authorization := r.Header.Get("Authorization")
+	if strings.HasPrefix(authorization, "Bearer ") {
+		return strings.TrimPrefix(authorization, "Bearer ") == expected
 	}
 	return r.Header.Get("X-Platform-Token") == expected
 }

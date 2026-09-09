@@ -78,7 +78,7 @@ export const createAdminSchema = z.object({
     'READ_ONLY_ADMIN',
   ]),
   team: z.enum(['Platform', 'Security', 'Operations', 'Support', 'Billing']),
-  requireMfa: z.boolean().default(true),
+  requireMfa: z.boolean().default(false),
 })
 
 export const createIncidentSchema = z.object({

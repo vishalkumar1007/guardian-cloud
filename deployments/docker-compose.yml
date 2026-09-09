@@ -31,6 +31,23 @@ services:
     ports:
       - "127.0.0.1:6381:6379"
 
+  # Catches every outbound mail in development (verification, password reset,
+  # email OTP, staff invitations). Nothing leaves the machine.
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+    healthcheck:
+      test: ["CMD", "sh", "-c", "wget -q -O- http://localhost:8025/readyz || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "127.0.0.1:1026:1025"  # SMTP
+      - "127.0.0.1:8026:8025"  # web UI
+
   api:
     build:
       context: ..
@@ -41,6 +58,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      mailpit:
+        condition: service_healthy
     environment:
       PORT: "8083"
       DATABASE_URL: postgres://guardian:${POSTGRES_PASSWORD:-guardian}@postgres:5432/guardian_cloud?sslmode=disable
@@ -48,6 +67,14 @@ services:
       GUARDIAN_PLATFORM_DEV_TOKEN: ${GUARDIAN_PLATFORM_DEV_TOKEN:-guardian-dev-super-admin}
       PUBLIC_BASE_URL: http://127.0.0.1:8083
       PUBLIC_WEB_URL: ${PUBLIC_WEB_URL:-http://127.0.0.1:5175}
+      AUTH_LEGACY_MODE: ${AUTH_LEGACY_MODE:-on}
+      AUTH_COOKIE_SECURE: "false"  # dev only; must be true behind https
+      GUARDIAN_SECRET_ENCRYPTION_KEY: "${GUARDIAN_SECRET_ENCRYPTION_KEY:?generate with: openssl rand -base64 32}"
+      # Empty: X-Forwarded-For is ignored, the transport peer is authoritative.
+      TRUSTED_PROXY_CIDRS: ${TRUSTED_PROXY_CIDRS:-}
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_FROM: ${SMTP_FROM:-Guardian <no-reply@guardian.local>}
     ports:
       - "127.0.0.1:8083:8083"
 
