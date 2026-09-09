@@ -1,6 +1,8 @@
+import { API_BASE_URL } from '../lib/apiClient'
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { WATCHLINE_DEFAULTS, applySchemeToThemePreserve, themePackToTokens, THEME_PACKS, softAccent, type ColorScheme, type ThemeTokens } from './tokens'
-import { ensureSessionUserId, getSuperAdminAuthHeaders } from './session'
+import { getSuperAdminAuthHeaders } from './session'
+import { useAuth } from '../auth/AuthProvider'
 
 const EVENT = 'guardian-admin-theme'
 
@@ -13,11 +15,12 @@ type DashboardThemeResponse = {
 }
 
 function apiBase() {
-  return (import.meta as any).env?.VITE_API_BASE_URL ?? 'http://127.0.0.1:8083'
+  // Shared with the rest of the app: same-origin by default so session
+  // cookies stay first-party. See lib/apiClient.
+  return API_BASE_URL
 }
 
 function getAuthHeaders(): Record<string, string> {
-  ensureSessionUserId()
   return getSuperAdminAuthHeaders()
 }
 
@@ -46,7 +49,7 @@ function parseDashboardResponse(res: any): DashboardThemeResponse {
 async function fetchDashboardTheme(): Promise<DashboardThemeResponse> {
   try {
     const headers = { ...getAuthHeaders() }
-    const res = await fetch(`${apiBase()}/api/v1/admin/dashboard-theme`, { headers })
+    const res = await fetch(`${apiBase()}/api/v1/admin/dashboard-theme`, { credentials: 'include', headers })
     if (res.status === 401) return { mode: 'follow_brand', theme: null }
     if (!res.ok) return { mode: 'follow_brand', theme: null }
     return parseDashboardResponse(await res.json())
@@ -57,7 +60,7 @@ async function fetchDashboardTheme(): Promise<DashboardThemeResponse> {
 
 async function putDashboardTheme(tokens: ThemeTokens): Promise<DashboardThemeResponse> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json', ...getAuthHeaders() }
-  const res = await fetch(`${apiBase()}/api/v1/admin/dashboard-theme`, {
+  const res = await fetch(`${apiBase()}/api/v1/admin/dashboard-theme`, { credentials: 'include',
     method: 'PUT',
     headers,
     body: JSON.stringify(tokens),
@@ -71,7 +74,7 @@ async function putDashboardTheme(tokens: ThemeTokens): Promise<DashboardThemeRes
 
 async function deleteDashboardTheme(): Promise<DashboardThemeResponse> {
   const headers = { ...getAuthHeaders() }
-  const res = await fetch(`${apiBase()}/api/v1/admin/dashboard-theme`, { method: 'DELETE', headers })
+  const res = await fetch(`${apiBase()}/api/v1/admin/dashboard-theme`, { credentials: 'include', method: 'DELETE', headers })
   if (!res.ok) {
     const body = await res.text().catch(() => '')
     throw new Error(body || `failed to clear dashboard theme (${res.status})`)
@@ -109,6 +112,7 @@ type Ctx = {
 const AdminThemeCtx = createContext<Ctx | null>(null)
 
 export function AdminThemeProvider({ children }: { children: React.ReactNode }) {
+  const authUserId = useAuth().user?.id ?? null
   const [adminTheme, setState] = useState<AdminTheme>(null)
   const [mode, setMode] = useState<DashboardThemeMode>('follow_brand')
   const [loading, setLoading] = useState(true)
@@ -137,7 +141,7 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
   const refresh = useCallback(async () => {
     try {
       const headers = { ...getAuthHeaders() }
-      const res = await fetch(`${apiBase()}/api/v1/admin/dashboard-theme`, { headers })
+      const res = await fetch(`${apiBase()}/api/v1/admin/dashboard-theme`, { credentials: 'include', headers })
       if (!res.ok) return
       applyResponse(parseDashboardResponse(await res.json()))
     } catch {
@@ -145,9 +149,11 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
     }
   }, [applyResponse])
 
+  // Keyed on the signed-in account: these preferences are per-user, and at first
+  // mount there is usually no session yet, so this has to re-run once the user
+  // signs in — and again if a different person signs in after them.
   useEffect(() => {
     purgeLegacyLocalCache()
-    ensureSessionUserId()
     let cancelled = false
     ;(async () => {
       setLoading(true)
@@ -166,7 +172,7 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
       cancelled = true
       window.removeEventListener(EVENT as any, onEvent as any)
     }
-  }, [applyResponse, refresh])
+  }, [applyResponse, refresh, authUserId])
 
   const persistPersonal = useCallback(async (t: ThemeTokens) => {
     setSaving(true)

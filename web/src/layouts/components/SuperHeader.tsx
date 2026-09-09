@@ -15,7 +15,16 @@ import { useTheme } from '../../theme/useTheme'
 import { useNavPrefs } from '../../theme/navPrefs'
 import { useAdminTheme } from '../../theme/adminTheme'
 import { NotificationCenter } from './NotificationCenter'
+import { useAuth } from '../../auth/AuthProvider'
 import { cn } from '../../lib/utils'
+
+/** Two-letter monogram for the avatar, from whatever name we have. */
+function initialsOf(name: string): string {
+  const parts = name.trim().split(/[\s@.]+/).filter(Boolean)
+  if (parts.length === 0) return 'G'
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return (parts[0][0] + parts[1][0]).toUpperCase()
+}
 
 interface SuperHeaderProps {
   onOpenMobileMenu: () => void
@@ -34,10 +43,14 @@ export function SuperHeader({ onOpenMobileMenu, onOpenCommandPalette }: SuperHea
   const pathSegments = location.pathname.split('/').filter(Boolean)
   // Custom dashboard uses personal tokens; Following Brand uses global Brand tokens.
   const activeScheme = (isPersonal && adminTheme ? adminTheme.colorScheme : theme.colorScheme) === 'dark' ? 'dark' : 'light'
+  const { user, logout } = useAuth()
+  const displayName = user?.display_name || user?.email || 'Guardian staff'
 
-  function handleSignOut() {
-    localStorage.removeItem('super_admin_session')
-    navigate('/super/login')
+  // Revokes the session server-side; clearing local state alone would leave the
+  // cookie live and the session usable.
+  async function handleSignOut() {
+    await logout()
+    navigate('/super/login', { replace: true })
   }
 
   function handleThemeToggle() {
@@ -154,27 +167,27 @@ export function SuperHeader({ onOpenMobileMenu, onOpenCommandPalette }: SuperHea
             className="flex items-center gap-2 rounded-lg border border-line bg-surface p-1 pr-2.5 text-xs text-ink hover:border-line transition-colors"
           >
             <div className="flex h-6 w-6 items-center justify-center rounded-md bg-signal text-mist-deep font-bold font-mono text-[10px]">
-              AV
+              {initialsOf(displayName)}
             </div>
-            <span className="hidden sm:inline font-medium">Alex Vance</span>
+            <span className="hidden sm:inline font-medium">{displayName}</span>
           </button>
 
           {profileOpen && (
             <div className="absolute right-0 top-11 z-40 w-56 rounded-xl border border-line bg-surface p-2 shadow-2xl space-y-1 text-xs font-mono">
               <div className="px-2 py-1.5 border-b border-line">
-                <span className="block font-semibold text-ink">Alexander Vance</span>
-                <span className="block text-[10px] text-ink-soft truncate">alexander.vance@guardian.internal</span>
+                <span className="block font-semibold text-ink">{displayName}</span>
+                <span className="block text-[10px] text-ink-soft truncate">{user?.email ?? ''}</span>
                 <div className="mt-1 flex items-center gap-1 text-[10px] text-signal font-semibold">
-                  <Shield className="h-3 w-3" /> SUPER_ADMIN
+                  <Shield className="h-3 w-3" /> {user?.roles?.[0]?.key ?? 'GUARDIAN STAFF'}
                 </div>
               </div>
 
               <Link
-                to="/admin/iam/users/adm-001"
+                to="/admin/account"
                 onClick={() => setProfileOpen(false)}
                 className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-ink-soft hover:bg-surface-2 hover:text-ink no-underline"
               >
-                <User className="h-3.5 w-3.5" /> My Admin Profile
+                <User className="h-3.5 w-3.5" /> Account & Security
               </Link>
 
               <Link

@@ -6,7 +6,7 @@ import { CommandPalette } from './components/CommandPalette'
 import { useAdminTheme } from '../theme/adminTheme'
 import { useTheme } from '../theme/useTheme'
 import { themeTokensToCssVars, applyThemeTokensToElement, applyThemeTokens, setDashboardShellOwnsTheme, setPersonalDashboardOwnsTheme } from '../theme/tokens'
-import { ensureSessionUserId } from '../theme/session'
+import { IdleTimeoutWarning } from '../auth/IdleTimeoutWarning'
 
 function applyRadiusCssVars(el: HTMLElement, radius: string, radiusSm: string, radiusLg: string) {
   el.style.setProperty('--g-radius', radius)
@@ -26,19 +26,9 @@ export function SuperAdminShell() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [cmdPaletteOpen, setCmdPaletteOpen] = useState(false)
 
-  useEffect(() => {
-    const session = localStorage.getItem('super_admin_session')
-    if (!session) {
-      localStorage.setItem('super_admin_session', JSON.stringify({
-        id: 'demo-session',
-        email: 'alexander.vance@guardian.internal',
-        role: 'SUPER_ADMIN',
-        name: 'Alexander Vance',
-      }))
-    } else {
-      ensureSessionUserId()
-    }
-  }, [])
+  // Authentication is enforced by RequireAuth around this shell in App.tsx.
+  // This component used to *create* a fake super-admin session in localStorage
+  // when none existed, which made the entire console reachable by URL.
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -144,6 +134,8 @@ export function SuperAdminShell() {
         isOpen={cmdPaletteOpen}
         onClose={() => setCmdPaletteOpen(false)}
       />
+
+      <IdleTimeoutWarning />
     </div>
   )
 }

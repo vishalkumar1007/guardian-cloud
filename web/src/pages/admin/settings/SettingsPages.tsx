@@ -6,18 +6,30 @@ import { adminService } from '../../../services/adminService'
 import { ConfirmDialog } from '../../../components/admin/ConfirmDialog'
 import { ThemeAppearanceSettings } from './ThemeAppearanceSettings'
 import { GeneralSaaSForm } from './GeneralSaaSForm'
+import { SSOProvidersSettings } from './SSOProvidersSettings'
 import { cn } from '../../../lib/utils'
 
+/**
+ * Dispatches to the component for a settings section.
+ *
+ * Sections with their own component are chosen here, before any hook runs. The
+ * remaining sections share one form below. Previously these early returns sat
+ * above the hook calls in a single component, which broke the rules of hooks:
+ * navigating between sections changed how many hooks ran on each render.
+ */
 export function SettingsPages() {
   const { section = 'general' } = useParams<{ section?: string }>()
 
-  if (section === 'appearance' || section === 'theme') {
-    return <ThemeAppearanceSettings />
-  }
-  if (section === 'general') {
-    return <GeneralSaaSForm />
-  }
+  if (section === 'appearance' || section === 'theme') return <ThemeAppearanceSettings />
+  if (section === 'general') return <GeneralSaaSForm />
+  // Real, API-backed provider configuration; replaces the mocked SAML fields.
+  if (section === 'authentication') return <SSOProvidersSettings />
 
+  return <LegacySettingsForm section={section} />
+}
+
+/** The sections still backed by the in-memory admin store. */
+function LegacySettingsForm({ section }: { section: string }) {
   const settings = useAdminData(() => adminService.getSettings())
 
   const [savedSuccess, setSavedSuccess] = useState(false)
@@ -25,8 +37,6 @@ export function SettingsPages() {
 
   const [mfaEnforced, setMfaEnforced] = useState(settings.security.mfaEnforcedForAdmins)
   const [sessionTimeout, setSessionTimeout] = useState(settings.security.sessionTimeoutMinutes)
-  const [ssoEnabled, setSsoEnabled] = useState(settings.authentication.ssoEnabled)
-  const [samlSsoUrl, setSamlSsoUrl] = useState(settings.authentication.samlSsoUrl)
   const [slackWebhook, setSlackWebhook] = useState(settings.notifications.slackWebhookUrl)
   const [evidenceBucket, setEvidenceBucket] = useState(settings.storage.evidenceBucket)
   const [auditRetention, setAuditRetention] = useState(settings.retention.auditRetentionDays)
@@ -37,8 +47,6 @@ export function SettingsPages() {
     e.preventDefault()
     if (section === 'security') {
       adminService.updateSettings('security', { mfaEnforcedForAdmins: mfaEnforced, sessionTimeoutMinutes: sessionTimeout })
-    } else if (section === 'authentication') {
-      adminService.updateSettings('authentication', { ssoEnabled, samlSsoUrl })
     } else if (section === 'notifications') {
       adminService.updateSettings('notifications', { slackWebhookUrl: slackWebhook })
     } else if (section === 'storage') {
@@ -84,8 +92,8 @@ export function SettingsPages() {
 
             <label className="flex items-center justify-between p-3 rounded-xl border border-line bg-surface-2/60 cursor-pointer">
               <div>
-                <span className="font-semibold text-ink block">Enforce Hardware WebAuthn MFA for All Admins</span>
-                <span className="text-[11px] text-ink-soft">Disallows password-only and SMS authenticators</span>
+                <span className="font-semibold text-ink block">Require authenticator MFA for all admins</span>
+                <span className="text-[11px] text-ink-soft">Forces TOTP enrollment before staff can finish signing in</span>
               </div>
               <input
                 type="checkbox"
@@ -113,38 +121,6 @@ export function SettingsPages() {
               >
                 Flush All Active Platform Sessions (Dangerous)
               </button>
-            </div>
-          </div>
-        )}
-
-        {/* Section: Authentication */}
-        {section === 'authentication' && (
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-display text-base font-bold text-ink">SAML 2.0 / OIDC Authentication</h3>
-              <p className="text-ink-soft text-xs mt-0.5">Single Sign-On federation and SCIM directory synchronization.</p>
-            </div>
-
-            <label className="flex items-center justify-between p-3 rounded-xl border border-line bg-surface-2/60 cursor-pointer">
-              <div>
-                <span className="font-semibold text-ink block">Enable SAML 2.0 SSO Federation</span>
-                <span className="text-[11px] text-ink-soft">Allows internal staff to sign in via Okta / Azure AD</span>
-              </div>
-              <input
-                type="checkbox"
-                checked={ssoEnabled}
-                onChange={(e) => setSsoEnabled(e.target.checked)}
-                className="rounded text-signal bg-surface-2 border-line"
-              />
-            </label>
-
-            <div className="space-y-1.5">
-              <label className="text-ink font-semibold block">IdP SSO Target URL</label>
-              <input
-                value={samlSsoUrl}
-                onChange={(e) => setSamlSsoUrl(e.target.value)}
-                className="w-full rounded-xl border border-line bg-surface-2 p-2.5 text-ink"
-              />
             </div>
           </div>
         )}

@@ -214,7 +214,19 @@ func validateDashboardThemeTokens(tokens map[string]any) error {
 // resolvePersonalUserID requires an explicit user identity for personal-scoped data.
 // Accepts X-User-Id / Bearer UUID / platform dev token → seeded superadmin.
 // Does NOT silently default anonymous requests to the seeded UUID.
+// resolvePersonalUserID identifies whose per-user settings a request refers to.
+//
+// A real staff session wins. Everything below it is the pre-session fallback,
+// which trusts a client-supplied header and is gated by AUTH_LEGACY_MODE — see
+// legacy.go for how it is being retired.
 func resolvePersonalUserID(r *http.Request) (string, bool) {
+	if id, ok := adminPrincipalID(r); ok {
+		return id, true
+	}
+	if !legacyFallbackAllowed(r, "resolvePersonalUserID") {
+		return "", false
+	}
+
 	if v := r.Header.Get("X-User-Id"); isUUID(v) {
 		return v, true
 	}
@@ -224,21 +236,27 @@ func resolvePersonalUserID(r *http.Request) (string, bool) {
 	if v := r.Header.Get("X-Tenant-User-Id"); isUUID(v) {
 		return v, true
 	}
-	auth := r.Header.Get("Authorization")
-	if strings.HasPrefix(auth, "Bearer ") {
-		token := strings.TrimPrefix(auth, "Bearer ")
+	authorization := r.Header.Get("Authorization")
+	if strings.HasPrefix(authorization, "Bearer ") {
+		token := strings.TrimPrefix(authorization, "Bearer ")
 		if isUUID(token) {
 			return token, true
 		}
 		if platformAuthorized(r) {
-			return "00000000-0000-4000-8000-0000000000bb", true
+			return seededSuperAdminUserID, true
 		}
 	}
 	if r.Header.Get("X-Platform-Token") != "" && platformAuthorized(r) {
-		return "00000000-0000-4000-8000-0000000000bb", true
+		return seededSuperAdminUserID, true
 	}
 	return "", false
 }
+
+// seededSuperAdminUserID is the users-table row seeded by migration 00008. The
+// staff plane's equivalent is a different id in guardian_admin_users; migration
+// 00018 copied this account's saved preferences across so nothing is lost when
+// the legacy path is switched off.
+const seededSuperAdminUserID = "00000000-0000-4000-8000-0000000000bb"
 
 func isUUID(s string) bool {
 	if len(s) != 36 {

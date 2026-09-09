@@ -2,9 +2,29 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-route
 import { useEffect } from 'react'
 import { PublicLayout } from './layouts/PublicLayout'
 import { LandingPage } from './pages/LandingPage'
+import { AdminAuthScope, AdminConsoleScope, CustomerAuthScope } from './auth/PlaneScopes'
 import { LoginPage } from './pages/LoginPage'
 import { SignupPage } from './pages/SignupPage'
+import {
+  ForgotPasswordPage,
+  ResetPasswordPage,
+  VerifyEmailPage,
+} from './pages/app/CustomerAuthPages'
+import { CustomerMfaChallengePage, CustomerMfaEnrollPage } from './pages/app/CustomerMfaPages'
+import { PersonalShell } from './pages/app/PersonalShell'
+import {
+  PersonalOverviewPage,
+  PersonalDevicesPage,
+  PersonalSecurityPage,
+  PersonalProfilePage,
+} from './pages/app/PersonalPages'
 import { SuperLoginPage } from './pages/super/SuperLoginPage'
+import { SuperSetupPage } from './pages/super/SuperSetupPage'
+import { SuperMfaChallengePage } from './pages/super/SuperMfaChallengePage'
+import { SuperMfaEnrollPage } from './pages/super/SuperMfaEnrollPage'
+import { RequireAuth } from './auth/RequireAuth'
+import { AuthBoundary } from './auth/AuthBoundary'
+import { AccountSecurityPage } from './pages/admin/account/AccountSecurityPage'
 import { TooltipProvider } from './components/ui/tooltip'
 
 // Guardian Super Admin Control Plane Components
@@ -74,86 +94,138 @@ export default function App() {
       <BrowserRouter>
         <ScrollToTop />
         <Routes>
-          {/* Public Website & Auth */}
+          {/* Marketing site. */}
           <Route element={<PublicLayout />}>
             <Route index element={<LandingPage />} />
-            <Route path="login" element={<LoginPage />} />
-            <Route path="signup" element={<SignupPage />} />
           </Route>
 
-          <Route path="super/login" element={<SuperLoginPage />} />
-
           {/* ======================================================== */}
-          {/* GUARDIAN SUPER ADMIN CONTROL PLANE ROUTES (/admin)       */}
+          {/* CUSTOMER PLANE (/login, /signup, /app)                   */}
+          {/* A separate identity domain from Guardian staff, with its  */}
+          {/* own cookie; it must never share auth state with /admin.   */}
           {/* ======================================================== */}
-          <Route path="admin" element={<SuperAdminShell />}>
-            {/* 1. Overview */}
-            <Route index element={<SuperAdminOverview />} />
-            <Route path="overview" element={<Navigate to="/admin" replace />} />
+          <Route element={<CustomerAuthScope />}>
+            <Route path="login" element={<LoginPage />} />
+            <Route path="signup" element={<SignupPage />} />
+            <Route path="forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="reset-password" element={<ResetPasswordPage />} />
+            <Route path="verify-email" element={<VerifyEmailPage />} />
+            {/* Follow-on sign-in steps; no session yet, only a challenge cookie. */}
+            <Route path="login/mfa" element={<CustomerMfaChallengePage />} />
+            <Route path="login/enroll-mfa" element={<CustomerMfaEnrollPage />} />
 
-            {/* 2. Organizations */}
-            <Route path="organizations" element={<OrganizationListPage />} />
-            <Route path="organizations/new" element={<OrganizationOnboardingPage />} />
-            <Route path="organizations/:id" element={<OrganizationDetailPage />} />
-
-            {/* 3. Individual Users */}
-            <Route path="users" element={<UserListPage />} />
-            <Route path="users/:id" element={<UserDetailPage />} />
-
-            {/* 4. Devices */}
-            <Route path="devices" element={<DeviceListPage />} />
-            <Route path="devices/:id" element={<DeviceDetailPage />} />
-
-            {/* 5. Plans, Subscriptions & Usage */}
-            <Route path="plans" element={<PlansPage />} />
-            <Route path="plans/:id" element={<PlanDetailPage />} />
-            <Route path="subscriptions" element={<SubscriptionsPage />} />
-            <Route path="usage" element={<UsagePage />} />
-
-            {/* 6. Security */}
-            <Route path="security" element={<SecurityOverviewPage />} />
-            <Route path="security/events" element={<SecurityEventsPage />} />
-            <Route path="security/incidents" element={<IncidentsPage />} />
-            <Route path="security/alerts" element={<AlertsPage />} />
-            <Route path="security/risk" element={<RiskAnalysisPage />} />
-
-            {/* 7. Guardian IAM */}
-            <Route path="iam/users" element={<AdminUsersPage />} />
-            <Route path="iam/users/:id" element={<AdminUserDetailPage />} />
-            <Route path="iam/roles" element={<RolesPage />} />
-            <Route path="iam/roles/:id" element={<RoleDetailPage />} />
-            <Route path="iam/permissions" element={<PermissionsMatrixPage />} />
-            <Route path="iam/teams" element={<TeamsPage />} />
-            <Route path="iam/invitations" element={<InvitationsPage />} />
-            <Route path="iam/sessions" element={<SessionsPage />} />
-            <Route path="iam/access-reviews" element={<AccessReviewsPage />} />
-
-            {/* 8. Audit */}
-            <Route path="audit" element={<AuditLogPage />} />
-            <Route path="audit/admin-actions" element={<AuditLogPage forcedCategory="ADMIN_ACTION" />} />
-            <Route path="audit/security-actions" element={<AuditLogPage forcedCategory="SECURITY_ACTION" />} />
-            <Route path="audit/data-access" element={<AuditLogPage forcedCategory="DATA_ACCESS" />} />
-
-            {/* 9. Platform Operations */}
-            <Route path="platform" element={<PlatformOverviewPage />} />
-            <Route path="platform/health" element={<SystemHealthPage />} />
-            <Route path="platform/services" element={<ServicesPage />} />
-            <Route path="platform/agents" element={<AgentReleasesPage />} />
-            <Route path="platform/features" element={<FeatureFlagsPage />} />
-            <Route path="platform/maintenance" element={<MaintenancePage />} />
-
-            {/* Direct Theme / Appearance shortcuts */}
-            <Route path="appearance" element={<Navigate to="/admin/settings/appearance" replace />} />
-            <Route path="theme" element={<Navigate to="/admin/settings/appearance" replace />} />
-
-            {/* 10. Platform Settings */}
-            <Route path="settings" element={<SettingsLayout />}>
-              <Route index element={<Navigate to="/admin/settings/general" replace />} />
-              <Route path=":section" element={<SettingsPages />} />
+            <Route
+              path="app"
+              element={
+                <RequireAuth>
+                  <PersonalShell />
+                </RequireAuth>
+              }
+            >
+              <Route index element={<PersonalOverviewPage />} />
+              <Route path="devices" element={<PersonalDevicesPage />} />
+              <Route path="security" element={<PersonalSecurityPage />} />
+              <Route path="profile" element={<PersonalProfilePage />} />
             </Route>
           </Route>
 
-          {/* Mirror /super/* directly to /admin/* */}
+          {/* ======================================================== */}
+          {/* GUARDIAN STAFF PLANE (/super/*, /admin)                  */}
+          {/* A separate identity domain from customers, with its own   */}
+          {/* cookie. Scoped here so public pages never probe it.       */}
+          {/* ======================================================== */}
+          <Route element={<AdminAuthScope />}>
+            {/* First-run setup. Redirects to sign-in once an admin exists. */}
+            <Route path="super/setup" element={<AuthBoundary><SuperSetupPage /></AuthBoundary>} />
+            <Route path="super/login" element={<SuperLoginPage />} />
+            {/* The two follow-on steps of signing in. Neither has a session yet:
+                both run on the short-lived challenge cookie the login issued. */}
+            <Route path="super/login/mfa" element={<SuperMfaChallengePage />} />
+            <Route path="super/login/enroll-mfa" element={<SuperMfaEnrollPage />} />
+
+            {/* ======================================================== */}
+            {/* GUARDIAN SUPER ADMIN CONTROL PLANE ROUTES (/admin)       */}
+            {/* ======================================================== */}
+            <Route
+              path="admin"
+              element={
+                <RequireAuth>
+                  <AdminConsoleScope>
+                    <SuperAdminShell />
+                  </AdminConsoleScope>
+                </RequireAuth>
+              }
+            >
+              {/* 1. Overview */}
+              <Route index element={<SuperAdminOverview />} />
+              <Route path="overview" element={<Navigate to="/admin" replace />} />
+
+              {/* 2. Organizations */}
+              <Route path="organizations" element={<OrganizationListPage />} />
+              <Route path="organizations/new" element={<OrganizationOnboardingPage />} />
+              <Route path="organizations/:id" element={<OrganizationDetailPage />} />
+
+              {/* 3. Individual Users */}
+              <Route path="users" element={<UserListPage />} />
+              <Route path="users/:id" element={<UserDetailPage />} />
+
+              {/* 4. Devices */}
+              <Route path="devices" element={<DeviceListPage />} />
+              <Route path="devices/:id" element={<DeviceDetailPage />} />
+
+              {/* 5. Plans, Subscriptions & Usage */}
+              <Route path="plans" element={<PlansPage />} />
+              <Route path="plans/:id" element={<PlanDetailPage />} />
+              <Route path="subscriptions" element={<SubscriptionsPage />} />
+              <Route path="usage" element={<UsagePage />} />
+
+              {/* 6. Security */}
+              <Route path="security" element={<SecurityOverviewPage />} />
+              <Route path="security/events" element={<SecurityEventsPage />} />
+              <Route path="security/incidents" element={<IncidentsPage />} />
+              <Route path="security/alerts" element={<AlertsPage />} />
+              <Route path="security/risk" element={<RiskAnalysisPage />} />
+
+              {/* 7. Guardian IAM */}
+              <Route path="iam/users" element={<AdminUsersPage />} />
+              <Route path="iam/users/:id" element={<AdminUserDetailPage />} />
+              <Route path="iam/roles" element={<RolesPage />} />
+              <Route path="iam/roles/:id" element={<RoleDetailPage />} />
+              <Route path="iam/permissions" element={<PermissionsMatrixPage />} />
+              <Route path="iam/teams" element={<TeamsPage />} />
+              <Route path="iam/invitations" element={<InvitationsPage />} />
+              <Route path="iam/sessions" element={<SessionsPage />} />
+              <Route path="iam/access-reviews" element={<AccessReviewsPage />} />
+
+              {/* 8. Audit */}
+              <Route path="audit" element={<AuditLogPage />} />
+              <Route path="audit/admin-actions" element={<AuditLogPage forcedCategory="ADMIN_ACTION" />} />
+              <Route path="audit/security-actions" element={<AuditLogPage forcedCategory="SECURITY_ACTION" />} />
+              <Route path="audit/data-access" element={<AuditLogPage forcedCategory="DATA_ACCESS" />} />
+
+              {/* 9. Platform Operations */}
+              <Route path="platform" element={<PlatformOverviewPage />} />
+              <Route path="platform/health" element={<SystemHealthPage />} />
+              <Route path="platform/services" element={<ServicesPage />} />
+              <Route path="platform/agents" element={<AgentReleasesPage />} />
+              <Route path="platform/features" element={<FeatureFlagsPage />} />
+              <Route path="platform/maintenance" element={<MaintenancePage />} />
+
+              {/* Direct Theme / Appearance shortcuts */}
+              <Route path="appearance" element={<Navigate to="/admin/settings/appearance" replace />} />
+              <Route path="theme" element={<Navigate to="/admin/settings/appearance" replace />} />
+
+              {/* 10. Platform Settings */}
+              <Route path="account" element={<AccountSecurityPage />} />
+              <Route path="settings" element={<SettingsLayout />}>
+                <Route index element={<Navigate to="/admin/settings/general" replace />} />
+                <Route path=":section" element={<SettingsPages />} />
+              </Route>
+            </Route>
+          </Route>
+
+          {/* Mirror /super/* directly to /admin/*. Outside the staff scope:
+              these only redirect and need no identity context. */}
           <Route path="super/appearance" element={<Navigate to="/admin/settings/appearance" replace />} />
           <Route path="super/settings" element={<Navigate to="/admin/settings/appearance" replace />} />
           <Route path="super/*" element={<Navigate to="/admin" replace />} />

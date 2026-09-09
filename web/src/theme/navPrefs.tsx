@@ -1,5 +1,7 @@
+import { API_BASE_URL } from '../lib/apiClient'
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { ensureSessionUserId, getSuperAdminAuthHeaders } from './session'
+import { getSuperAdminAuthHeaders } from './session'
+import { useAuth } from '../auth/AuthProvider'
 
 export type NavWidth = '220' | '240' | '270' | '300' | '320'
 export type NavCollapsedWidth = '56' | '68' | '80'
@@ -48,7 +50,9 @@ const BASE_KEY = 'guardian-nav-prefs'
 const KEY = BASE_KEY
 const NAV_DB_ONLY = true
 function getUserId(): string | null {
-  return ensureSessionUserId()
+  // Identity now comes from the session cookie, so there is no client-visible
+  // user id to namespace the local cache with; the API is the source of truth.
+  return null
 }
 function getKey(): string {
   const uid = getUserId()
@@ -64,7 +68,7 @@ const DEFAULTS: NavPrefs = {
   showFooterUser: true,
   favorites: [],
   hiddenSections: [],
-  topHeight: '64',
+  topHeight: '56',
   topOpacity: '75',
   topBlur: 'xl',
   showBreadcrumbs: true,
@@ -81,10 +85,11 @@ const DEFAULTS: NavPrefs = {
 }
 
 function apiBase() {
-  return (import.meta as any).env?.VITE_API_BASE_URL ?? 'http://127.0.0.1:8083'
+  // Shared with the rest of the app: same-origin by default so session
+  // cookies stay first-party. See lib/apiClient.
+  return API_BASE_URL
 }
 function getAuthHeaders(): Record<string, string> {
-  ensureSessionUserId()
   return getSuperAdminAuthHeaders()
 }
 let memoryPrefs: NavPrefs | null = null
@@ -118,8 +123,8 @@ function write(p: NavPrefs) {
     const navigation = { width, collapsedWidth, density, showSubtitles, showSectionIcons, showSectionDots, showFooterUser, favorites, hiddenSections, topHeight, topOpacity, topBlur, showBreadcrumbs, showSearch, showDemoBadge, showNotifications, showThemeToggle, syncWithSidebar }
     const adminStudio = { adminRadius: p.adminRadius, adminRadiusSm: p.adminRadiusSm, adminRadiusLg: p.adminRadiusLg, messageDensity: p.messageDensity, messageStyle: p.messageStyle }
     const headers: Record<string, string> = { 'Content-Type': 'application/json', ...getAuthHeaders() }
-    fetch(`${apiBase()}/api/v1/admin/settings/navigation?scope=personal`, { method: 'PUT', headers, body: JSON.stringify(navigation) }).catch(() => {})
-    fetch(`${apiBase()}/api/v1/admin/settings/admin_studio?scope=personal`, { method: 'PUT', headers, body: JSON.stringify(adminStudio) }).catch(() => {})
+    fetch(`${apiBase()}/api/v1/admin/settings/navigation?scope=personal`, { credentials: 'include', method: 'PUT', headers, body: JSON.stringify(navigation) }).catch(() => {})
+    fetch(`${apiBase()}/api/v1/admin/settings/admin_studio?scope=personal`, { credentials: 'include', method: 'PUT', headers, body: JSON.stringify(adminStudio) }).catch(() => {})
   } catch {}
 }
 
@@ -135,15 +140,18 @@ type Ctx = {
 const NavCtx = createContext<Ctx | null>(null)
 
 export function NavPrefsProvider({ children }: { children: React.ReactNode }) {
+  const authUserId = useAuth().user?.id ?? null
   const [prefs, setPrefsState] = useState<NavPrefs>(() => read())
+  // Keyed on the signed-in account: navigation preferences are per-user, and at
+  // first mount there is usually no session yet to fetch them with.
   useEffect(() => {
     ;(async () => {
       const genAtStart = prefsWriteGen
       try {
         const headers: Record<string, string> = { ...getAuthHeaders() }
         const [navRes, adminRes] = await Promise.all([
-          fetch(`${apiBase()}/api/v1/admin/settings/navigation?scope=personal`, { headers }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
-          fetch(`${apiBase()}/api/v1/admin/settings/admin_studio?scope=personal`, { headers }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+          fetch(`${apiBase()}/api/v1/admin/settings/navigation?scope=personal`, { credentials: 'include', headers }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+          fetch(`${apiBase()}/api/v1/admin/settings/admin_studio?scope=personal`, { credentials: 'include', headers }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
         ])
         // Don't clobber Personal Radius / local edits made while the fetch was in flight.
         if (genAtStart !== prefsWriteGen) return
@@ -172,7 +180,7 @@ export function NavPrefsProvider({ children }: { children: React.ReactNode }) {
     window.addEventListener('guardian-nav-prefs', h as any)
     if (!NAV_DB_ONLY) window.addEventListener('storage', h as any)
     return () => { window.removeEventListener('guardian-nav-prefs', h as any); if (!NAV_DB_ONLY) window.removeEventListener('storage', h as any) }
-  }, [])
+  }, [authUserId])
   const setPrefs = useCallback((patch: Partial<NavPrefs>) => {
     const next = { ...read(), ...patch }
     write(next); setPrefsState(next)

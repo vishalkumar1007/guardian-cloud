@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../lib/apiClient'
 import {
   createContext,
   createElement,
@@ -43,7 +44,9 @@ export type ThemeContextValue = {
 export const ThemeContext = createContext<ThemeContextValue | null>(null)
 
 function apiBase() {
-  return import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8083'
+  // Shared with the rest of the app: same-origin by default so session
+  // cookies stay first-party. See lib/apiClient.
+  return API_BASE_URL
 }
 
 function platformToken() {
@@ -121,7 +124,7 @@ function mapTheme(data: any): PlatformTheme {
 }
 
 async function fetchTheme(): Promise<PlatformTheme> {
-  const res = await fetch(`${apiBase()}/api/v1/platform/theme`)
+  const res = await fetch(`${apiBase()}/api/v1/platform/theme`, { credentials: 'include' })
   if (!res.ok) throw new Error(`theme fetch failed (${res.status})`)
   return mapTheme(await res.json())
 }
@@ -132,7 +135,7 @@ async function putTheme(tokens: ThemeTokens): Promise<PlatformTheme> {
   const signalSoft = tokens.signalSoft || (tokens.colorScheme === 'dark' ? 'rgba(129,140,248,0.15)' : '#e0e7ff')
   const normalized: ThemeTokens = { ...tokens, accent, accent2, signal: tokens.signal || accent, signalSoft }
   persistTheme(normalized)
-  const res = await fetch(`${apiBase()}/api/v1/platform/theme`, {
+  const res = await fetch(`${apiBase()}/api/v1/platform/theme`, { credentials: 'include',
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',

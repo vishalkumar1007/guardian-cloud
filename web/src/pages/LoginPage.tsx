@@ -1,40 +1,131 @@
-import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState, type FormEvent } from 'react'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'motion/react'
-import { AtSign, Lock, Eye, EyeOff, ArrowRight, Fingerprint, Check } from 'lucide-react'
+import { AtSign, Lock, Eye, EyeOff, ArrowRight, Check } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { GuardianMark } from '../components/GuardianMark'
 import { SentinelMeshBg } from '../components/home/SentinelMeshBg'
+import { useAuth } from '../auth/AuthProvider'
+import { AuthBoundary } from '../auth/AuthBoundary'
+import { SSOButtons } from '../auth/SSOButtons'
+import { SSO_ERROR_MESSAGE } from '../auth/useSSOProviders'
+import { ApiError } from '../lib/apiClient'
 
+/**
+ * Customer sign-in.
+ *
+ * Wrapped in AuthBoundary so the form is not shown before startup resolves —
+ * otherwise someone already signed in would see it flash before the redirect.
+ */
 export function LoginPage() {
+  return (
+    <AuthBoundary>
+      <LoginForm />
+    </AuthBoundary>
+  )
+}
+
+function LoginForm() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [searchParams] = useSearchParams()
+  const { user, login, endedReason, clearEndedReason } = useAuth()
+
+  // Where the route guard bounced them from, so sign-in returns them there.
+  const returnTo = (location.state as { from?: string } | null)?.from ?? '/app'
+  const ssoError = searchParams.get('error')
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  const [isError, setIsError] = useState(false)
+  const [lockoutSeconds, setLockoutSeconds] = useState<number | null>(null)
 
-  function onSubmit(e: FormEvent) {
+  useEffect(() => {
+    if (user) navigate(returnTo, { replace: true })
+  }, [user, navigate, returnTo])
+
+  // Counts the lockout down so the wait is visible rather than a flat refusal.
+  useEffect(() => {
+    if (lockoutSeconds === null || lockoutSeconds <= 0) return
+    const timer = window.setInterval(
+      () => setLockoutSeconds((current) => (current === null || current <= 1 ? null : current - 1)),
+      1000,
+    )
+    return () => window.clearInterval(timer)
+  }, [lockoutSeconds])
+
+  // A failed SSO round trip comes back as a redirect carrying ?error=.
+  useEffect(() => {
+    if (!ssoError) return
+    setNotice(SSO_ERROR_MESSAGE[ssoError] ?? 'Sign-in failed. Please try again.')
+    setIsError(true)
+  }, [ssoError])
+
+  function fail(message: string) {
+    setNotice(message)
+    setIsError(true)
+  }
+
+  async function onSubmit(e: FormEvent) {
     e.preventDefault()
     if (!email || !email.includes('@')) {
-      setNotice('Please enter a valid email address.')
-      return
-    }
-    if (password.length < 8) {
-      setNotice('Password must be at least 8 characters.')
+      fail('Please enter a valid email address.')
       return
     }
 
     setIsSubmitting(true)
     setNotice(null)
+    setIsError(false)
+    clearEndedReason()
 
-    setTimeout(() => {
+    try {
+      const result = await login(email.trim(), password)
+
+      switch (result.status) {
+        case 'authenticated':
+          navigate(returnTo, { replace: true })
+          break
+        case 'mfa_required':
+          // The password was right but no session exists yet; the challenge
+          // lives in a short-lived cookie the next screen presents.
+          navigate('/login/mfa', {
+            replace: true,
+            state: { methods: result.methods ?? ['TOTP'], returnTo },
+          })
+          break
+        case 'mfa_enrollment_required':
+          navigate('/login/enroll-mfa', { replace: true, state: { returnTo } })
+          break
+      }
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 423) {
+        setLockoutSeconds(err.retryAfterSeconds ?? 60)
+        fail('Too many failed attempts. Please wait before trying again.')
+      } else if (err instanceof ApiError && err.status === 403) {
+        fail(err.message)
+      } else if (err instanceof ApiError) {
+        fail('Invalid email or password.')
+      } else {
+        fail('Could not reach Guardian. Check your connection and try again.')
+      }
+    } finally {
       setIsSubmitting(false)
-      setNotice('Credentials validated. Ready to connect to backend session.')
-    }, 600)
+    }
   }
+
+  const isLockedOut = lockoutSeconds !== null && lockoutSeconds > 0
+  const sessionEndedNote =
+    endedReason === 'idle_timeout'
+      ? 'You were signed out after a period of inactivity.'
+      : endedReason === 'expired'
+        ? 'Your session expired. Please sign in again.'
+        : null
 
   return (
     <div className="relative h-[100dvh] w-screen overflow-hidden bg-mist">
@@ -205,11 +296,13 @@ export function LoginPage() {
                   type="submit"
                   variant="signal"
                   size="default"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isLockedOut}
                   className="w-full rounded-xl py-5 text-sm font-semibold shadow-sm"
                 >
                   {isSubmitting ? (
                     'Signing in...'
+                  ) : isLockedOut ? (
+                    `Locked — retry in ${lockoutSeconds}s`
                   ) : (
                     <span className="inline-flex items-center gap-2">
                       Sign in <ArrowRight className="h-4 w-4" />
@@ -218,28 +311,27 @@ export function LoginPage() {
                 </Button>
               </form>
 
-              {notice && (
-                <div className="rounded-xl border border-signal/30 bg-signal-soft/20 px-3 py-2 text-xs text-ink">
-                  {notice}
+              {(notice || sessionEndedNote) && (
+                <div
+                  className={
+                    isError
+                      ? 'rounded-xl border border-alert/30 bg-alert/5 px-3 py-2 text-xs text-alert'
+                      : 'rounded-xl border border-signal/30 bg-signal-soft/20 px-3 py-2 text-xs text-ink'
+                  }
+                >
+                  {notice ?? sessionEndedNote}
                 </div>
               )}
 
-              <div className="flex items-center gap-3">
-                <span className="h-px flex-1 bg-line" />
-                <span className="font-mono text-[10px] uppercase tracking-wider text-ink-soft">or</span>
-                <span className="h-px flex-1 bg-line" />
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full rounded-xl gap-2 font-mono text-xs"
-              >
-                <Fingerprint className="h-4 w-4 text-signal" />
-                <span>Continue with Passkey (FIDO2)</span>
-              </Button>
+              <SSOButtons plane="customer" redirectAfter={returnTo} dividerLabel="or" />
 
               <p className="text-center text-xs text-ink-soft pt-1">
+                <Link to="/forgot-password" className="text-ink-soft hover:text-ink hover:underline">
+                  Forgot your password?
+                </Link>
+              </p>
+
+              <p className="text-center text-xs text-ink-soft">
                 Don't have an account?{' '}
                 <Link to="/signup" className="font-semibold text-signal hover:underline">
                   Create one here
